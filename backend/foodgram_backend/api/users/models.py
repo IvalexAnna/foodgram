@@ -29,7 +29,9 @@ class FoodgramUser(AbstractUser):
     )
     avatar = models.ImageField(upload_to="users/", null=True, blank=True)
     is_subscribed = models.BooleanField(default=False, verbose_name="Подписан")
-    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
     class Meta(AbstractUser.Meta):
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"

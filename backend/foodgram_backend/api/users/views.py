@@ -8,17 +8,24 @@ from rest_framework import filters, status, viewsets
 from rest_framework.exceptions import MethodNotAllowed, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from api.users.models import UserRole, FoodgramUser
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
+from .authentication import EmailBackend
 
 from .permissions import IsAnonymous, IsAuthenticatedUser
 from .serializers import TokenSerializer, FoodgramUserSerializer, SignUpSerializer
 
+
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для управления пользователями."""
+
     queryset = FoodgramUser.objects.all()
     serializer_class = FoodgramUserSerializer
-    permission_classes = [IsAuthenticatedUser]
+    permission_classes = [IsAnonymous]
     filter_backends = (filters.SearchFilter,)
     search_fields = ("username",)
     lookup_field = "username"
@@ -49,8 +56,7 @@ class UserViewSet(viewsets.ModelViewSet):
             valid_roles = [UserRole.ADMIN, UserRole.MODERATOR, UserRole.USER]
             if role not in valid_roles:
                 return Response(
-                    {"error": "Неверная роль."},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"error": "Неверная роль."}, status=status.HTTP_400_BAD_REQUEST
                 )
 
             data.pop("role", None)
@@ -86,38 +92,36 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class TokenObtainView(APIView):
     """View для получения токена доступа."""
-    permission_classes = [IsAnonymous]
+
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        backend_instance = EmailBackend()
+        user = backend_instance.authenticate(
+            request=request,
+            **serializer.validated_data)
 
-        user = get_object_or_404(
-            FoodgramUser, username=serializer.validated_data["username"]
-        )
-
-        if user.confirmation_code != serializer.validated_data[
-            "confirmation_code"
-        ]:
+        if user is None:
             return Response(
-                {"detail": "Неверный код подтверждения."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "Неверный email или пароль."},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        token = AccessToken.for_user(user)
-        return Response({"token": str(token)}, status=status.HTTP_200_OK)
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {"refresh": str(refresh), "access": str(refresh.access_token)},
+            status=status.HTTP_200_OK,
+        )
+
 
 class SignupView(APIView):
     """View для регистрации нового пользователя."""
-    permission_classes = [IsAnonymous]
+
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        if request.data.get("username") == "me":
-            return Response(
-                {"error": 'Имя пользователя "me" недопустимо.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -131,8 +135,7 @@ class SignupView(APIView):
         self.send_confirmation_email(user.email, confirmation_code)
 
         return Response(
-            {"username": user.username,
-             "email": user.email}, status=status.HTTP_200_OK
+            {"username": user.username, "email": user.email}, status=status.HTTP_200_OK
         )
 
     def send_confirmation_email(self, email, confirmation_code):

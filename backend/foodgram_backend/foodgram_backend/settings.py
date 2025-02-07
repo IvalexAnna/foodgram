@@ -113,20 +113,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated', 
+        'rest_framework.permissions.AllowAny',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
 }
-
-
-SIMPLE_JWT = {
-
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-   'AUTH_HEADER_TYPES': ('Bearer',),
-} 
 
 DATABASES = {
     'default': {
@@ -140,9 +133,17 @@ DATABASES = {
 }
 
 DJOSER = {
-    'USER_CREATE_PASSWORD_RETYPE': True,
-    'SEND_ACTIVATION_EMAIL': False,
+    'LOGIN_FIELD': 'email',
+    'HIDE_USERS': False,
+    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': False,
+    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
     'SERIALIZERS': {
-        'user_create': 'backend.foodgram_backend.api.users.serializers.FoodgramUserSerializer',
+        'user': 'api.users.serializers.FoodgramUserSerializer',
+        'user_create': 'api.users.serializers.FoodgramUserSerializer',
+        'current_user': 'api.users.serializers.FoodgramUserSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.AllowAny']
     },
 }

@@ -6,6 +6,7 @@ from django.db.utils import IntegrityError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from api.users.models import UserRole
+from django.db import models
 
 FoodgramUser = get_user_model()
 
@@ -14,7 +15,12 @@ class FoodgramUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = FoodgramUser
         fields = [
-            "email", "username", "is_subscribed", "avatar", "first_name", "last_name"
+            "email",
+            "username",
+            "is_subscribed",
+            "avatar",
+            "first_name",
+            "last_name",
         ]
 
     def create(self, validated_data):
@@ -73,7 +79,7 @@ class FoodgramUserSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        new_avatar = validated_data.get('avatar', None)
+        new_avatar = validated_data.get("avatar", None)
 
         if new_avatar is None:
             return self.delete_avatar(instance)
@@ -104,5 +110,9 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+
+    email = serializers.EmailField(required=True, max_length=150)
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        fields = ["email", "password"]
