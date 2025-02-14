@@ -10,4 +10,4 @@ COPY . .
 
 RUN python manage.py makemigrations && python manage.py migrate
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram_backend.foodgram_backend.wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram.wsgi"]

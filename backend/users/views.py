@@ -8,27 +8,19 @@ from rest_framework import filters, status, viewsets
 from rest_framework.exceptions import MethodNotAllowed, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-from api.users.models import UserRole, FoodgramUser
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
-from .authentication import EmailBackend
-
+from rest_framework_simplejwt.tokens import AccessToken
+from users.models import UserRole, FoodgramUser
+from djoser.views import UserViewSet
 from .permissions import IsAnonymous, IsAuthenticatedUser
-from .serializers import TokenSerializer, FoodgramUserSerializer, SignUpSerializer
+from .serializers import CustomUserSerializer
 
-
-class UserViewSet(viewsets.ModelViewSet):
+class CustomUserViewSet(UserViewSet):
     """ViewSet для управления пользователями."""
-
     queryset = FoodgramUser.objects.all()
-    serializer_class = FoodgramUserSerializer
-    permission_classes = [IsAnonymous]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ("username",)
-    lookup_field = "username"
+    serializer_class = CustomUserSerializer
+    permission_classes = [IsAuthenticatedUser]
+    #pagination_class = LimitOffstPagination
+
 
     def list(self, request, *args, **kwargs):
         if not request.user.is_admin:
@@ -56,7 +48,8 @@ class UserViewSet(viewsets.ModelViewSet):
             valid_roles = [UserRole.ADMIN, UserRole.MODERATOR, UserRole.USER]
             if role not in valid_roles:
                 return Response(
-                    {"error": "Неверная роль."}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": "Неверная роль."},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
 
             data.pop("role", None)
@@ -90,59 +83,39 @@ class UserViewSet(viewsets.ModelViewSet):
         raise MethodNotAllowed("PUT-запросы к этому ресурсу не предусмотрены.")
 
 
-class TokenObtainView(APIView):
-    """View для получения токена доступа."""
+# class SignupView(APIView):
+#     """View для регистрации нового пользователя."""
+#     permission_classes = [IsAnonymous]
 
-    permission_classes = [AllowAny]
+#     def post(self, request):
+#         if request.data.get("username") == "me":
+#             return Response(
+#                 {"error": 'Имя пользователя "me" недопустимо.'},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
 
-    def post(self, request):
-        serializer = TokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        backend_instance = EmailBackend()
-        user = backend_instance.authenticate(
-            request=request,
-            **serializer.validated_data)
+#         serializer = SignUpSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = serializer.save()
 
-        if user is None:
-            return Response(
-                {"detail": "Неверный email или пароль."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+#         confirmation_code = "".join(
+#             random.choices(string.ascii_letters + string.digits, k=6)
+#         )
+#         user.confirmation_code = confirmation_code
+#         user.save()
 
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {"refresh": str(refresh), "access": str(refresh.access_token)},
-            status=status.HTTP_200_OK,
-        )
+#         self.send_confirmation_email(user.email, confirmation_code)
 
+#         return Response(
+#             {"username": user.username,
+#              "email": user.email}, status=status.HTTP_200_OK
+#         )
 
-class SignupView(APIView):
-    """View для регистрации нового пользователя."""
-
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = SignUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-
-        confirmation_code = "".join(
-            random.choices(string.ascii_letters + string.digits, k=6)
-        )
-        user.confirmation_code = confirmation_code
-        user.save()
-
-        self.send_confirmation_email(user.email, confirmation_code)
-
-        return Response(
-            {"username": user.username, "email": user.email}, status=status.HTTP_200_OK
-        )
-
-    def send_confirmation_email(self, email, confirmation_code):
-        send_mail(
-            "Код подтверждения",
-            f"Ваш код подтверждения: {confirmation_code}",
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
+#     def send_confirmation_email(self, email, confirmation_code):
+#         send_mail(
+#             "Код подтверждения",
+#             f"Ваш код подтверждения: {confirmation_code}",
+#             settings.DEFAULT_FROM_EMAIL,
+#             [email],
+#             fail_silently=False,
+#         )

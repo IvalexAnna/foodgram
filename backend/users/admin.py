@@ -5,10 +5,9 @@ from .models import FoodgramUser
 
 
 @admin.register(FoodgramUser)
-class YamdbUserAdmin(UserAdmin):
+class FoodgramUserAdmin(UserAdmin):
     list_display = (
-        "email", "username", "is_subscribed", "avatar", "first_name",
-        "last_name")
+        "email", "username", "first_name", "last_name")
     list_filter = ("username",)
     search_fields = ("email", "username")
     empty_value_display = "-пусто-"
