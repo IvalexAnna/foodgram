@@ -122,3 +122,5 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    #filter_backends = (DjangoFilterBackend,)
+    #filterset_class = IngredientFilter
