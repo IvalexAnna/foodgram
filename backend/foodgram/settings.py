@@ -15,9 +15,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["localhost"]
 
-# Application definition
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -137,7 +137,7 @@ DATABASES = {
         "USER": os.getenv("POSTGRES_USER", "django_user"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
         "HOST": os.getenv("DB_HOST", "db"),
-        "PORT": os.getenv("DB_PORT", 5432),
+        "PORT": int(os.getenv("DB_PORT", 5432)),
     }
 }
 
