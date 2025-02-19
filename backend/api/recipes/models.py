@@ -22,15 +22,18 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Автор публикации"
     )
-    name = models.CharField(max_length=MAX_TEXT_LENGTH, verbose_name="Название рецепта", db_index=True)
-    image = models.ImageField(upload_to="recipes/", verbose_name="Картинка", blank=True)
+    name = models.CharField(max_length=MAX_TEXT_LENGTH,
+                            verbose_name="Название рецепта", db_index=True)
+    image = models.ImageField(upload_to="recipes/",
+                              verbose_name="Картинка", blank=True)
     text = models.TextField(verbose_name="Текстовое описание")
     ingredients = models.ManyToManyField(
         "RecipeIngredient",
         related_name='recipes',
         verbose_name="Ингредиенты"
     )
-    tags = models.ManyToManyField("Tag", related_name="recipes", verbose_name='Теги')
+    tags = models.ManyToManyField(
+        "Tag", related_name="recipes", verbose_name='Теги')
     cooking_time = models.PositiveIntegerField(
         verbose_name="Время приготовления (в минутах)"
     )
@@ -47,7 +50,8 @@ class Recipe(models.Model):
 class Tag(models.Model):
     """Модель для представления тегов."""
 
-    name = models.CharField(max_length=MAX_TEXT_LENGTH, verbose_name="Тег", unique=True)
+    name = models.CharField(max_length=MAX_TEXT_LENGTH,
+                            verbose_name="Тег", unique=True)
     slug = models.SlugField(
         max_length=MAX_SLUG_LNGTH,
         unique=True,
@@ -72,8 +76,10 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Модель для представления ингредиентов."""
 
-    name = models.CharField(max_length=255, verbose_name="Название ингредиента")
-    measurement_unit = models.CharField(max_length=50, verbose_name="Единица измерения")
+    name = models.CharField(max_length=MAX_TEXT_LENGTH,
+                            verbose_name="Название ингредиента")
+    measurement_unit = models.CharField(
+        max_length=MAX_SLUG_LNGTH, verbose_name="Единица измерения")
 
     class Meta:
         ordering = ("name",)
@@ -87,7 +93,7 @@ class Ingredient(models.Model):
 class RecipeIngredient(models.Model):
     """Промежуточная модель для связи рецептов и ингредиентов."""
 
-    #recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="ingredient_list")
+    # recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="ingredient_list")
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
@@ -159,7 +165,8 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f'{self.user} добавил "{self.recipe}" в Избранное'
-    
+
+
 class ShoppingCart(models.Model):
     """Модель корзины"""
     user = models.ForeignKey(

@@ -15,27 +15,20 @@ from .serializers import RecipeSerializer, TagSerializer, IngredientSerializer
 
 from .recipes.models import Recipe, Tag, Ingredient
 from .serializers import RecipeSerializer, TagSerializer, IngredientSerializer
+from .pagination import CustomPagination
+#from .filters import RecipeFilter
 
-
-class RecipeViewSet(viewsets.ModelViewSet):
-    """Представление для работы с категориями."""
-
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    # filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    #filter_backends = RecipeFilter
     # search_fields = ("name",)
     # filterset_fields = ["tags", "author"]
-        
-    def perform_create(self, serializer):
-        """Автоматически устанавливаем автора рецепта."""
-        serializer.save(author=self.request.user)
+
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -122,5 +115,6 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = None
     #filter_backends = (DjangoFilterBackend,)
     #filterset_class = IngredientFilter

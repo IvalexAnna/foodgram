@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 MAX_LENGTH: int = 6
+NAME_LENGTH: int = 150
 
 
 class UserRole(models.TextChoices):
@@ -15,13 +16,16 @@ class UserRole(models.TextChoices):
 class FoodgramUser(AbstractUser):
     """Модель для пользователей созданная для приложения foodgram"""
 
-    email = models.EmailField(verbose_name="Электронная почта", unique=True)
+    email = models.EmailField(max_length=NAME_LENGTH,
+                              verbose_name="Электронная почта", unique=True)
     username = models.CharField(
-        max_length=150, verbose_name="Имя пользователя", unique=True, db_index=True
+        max_length=NAME_LENGTH, verbose_name="Имя пользователя", unique=True, db_index=True
     )
-    first_name = models.CharField(max_length=150, verbose_name="Имя")
-    last_name = models.CharField(max_length=150, verbose_name="Фамилия")
-
+    first_name = models.CharField(max_length=NAME_LENGTH, verbose_name="Имя")
+    last_name = models.CharField(
+        max_length=NAME_LENGTH, verbose_name="Фамилия")
+    avatar = models.ImageField(
+        upload_to='avatars/', null=True, blank=True, verbose_name="Аватар")
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
 
@@ -60,11 +64,11 @@ class Follow(models.Model):
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
         constraints = [
-            models.UniqueConstraint(fields=["user", "author"], name="unique_follow")
+            models.UniqueConstraint(
+                fields=["user", "author"], name="unique_follow")
         ]
 
     def str(self):
         """Метод строкового представления модели."""
 
         return f"{self.user} {self.author}"
-
