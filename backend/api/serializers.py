@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 
 from rest_framework import serializers
-from .recipes.models import Recipe, Tag, Ingredient, RecipeIngredient
+from .recipes.models import Recipe, Tag, Ingredient, RecipeIngredient, ShoppingCart, Favorite
 from rest_framework.exceptions import ValidationError
 from users.models import FoodgramUser, Follow
 from users.serializers import CustomUserSerializer
@@ -82,17 +82,19 @@ class RecipeSerializer(ModelSerializer):
             "is_in_shopping_cart",
         ]
 
-    def get_is_favorited(self, recipe):
-        user = self.context.get("request").user
-        if user.is_anonymous:
-            return False
-        return user.favorites.filter(recipe=recipe).exists()
+    def get_is_favorited(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return Favorite.objects.filter(user=request.user,
+                                           recipe=obj).exists()
+        return False
 
-    def get_is_in_shopping_cart(self, recipe):
-        user = self.context.get("request").user
-        if user.is_anonymous:
-            return False
-        return user.shopping_cart.filter(recipe=recipe).exists()
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return ShoppingCart.objects.filter(user=request.user,
+                                               recipe=obj).exists()
+        return False
 
 
 class RecipeCreateSerializer(ModelSerializer):
@@ -163,16 +165,19 @@ class RecipeCreateSerializer(ModelSerializer):
         self.create_ingredients_amounts(recipe=recipe,
                                         ingredients=ingredients)
         return recipe
-
+    #ИЗМЕНЕНО
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        # instance = super().update(instance, validated_data)
+
+        # Обновляем теги
         instance.tags.clear()
         instance.tags.set(tags)
-        instance.ingredients.clear()
-        self.create_ingredients_amounts(recipe=instance,
-                                        ingredients=ingredients)
+
+        # Обновляем ингредиенты
+        instance.ingredient_list.all().delete()  # Удаляем старые ингредиенты
+        self.create_ingredients_amounts(recipe=instance, ingredients=ingredients)
+
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):

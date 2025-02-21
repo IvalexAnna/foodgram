@@ -12,7 +12,7 @@ User = get_user_model()
 MAX_TEXT_LENGTH: int = 256
 MAX_SLUG_LNGTH: int = 50
 
-
+#ТУТ ПОМЕНЯЛА ИНГРИДИЕНТ
 class Recipe(models.Model):
     """Модель для представления рецептов."""
 
@@ -28,7 +28,7 @@ class Recipe(models.Model):
                               verbose_name="Картинка", blank=True)
     text = models.TextField(verbose_name="Текстовое описание")
     ingredients = models.ManyToManyField(
-        "RecipeIngredient",
+        "Ingredient",
         related_name='recipes',
         verbose_name="Ингредиенты"
     )
@@ -37,7 +37,13 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         verbose_name="Время приготовления (в минутах)"
     )
-
+    short_link = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        unique=True,
+        verbose_name="Короткая ссылка",
+    )
     class Meta:
         ordering = ("name",)
         verbose_name = "Рецепт"
@@ -93,14 +99,14 @@ class Ingredient(models.Model):
 class RecipeIngredient(models.Model):
     """Промежуточная модель для связи рецептов и ингредиентов."""
 
-    # recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="ingredient_list")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="ingredient_list")
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         related_name='ingredient_list',
         verbose_name='Ингредиенты в рецепте',
     )
-    amount = models.IntegerField(
+    amount = models.PositiveIntegerField(
         default=1,
         validators=[
             MinValueValidator(1, 'Минимальное значение - 1')

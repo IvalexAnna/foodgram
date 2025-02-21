@@ -5,100 +5,114 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
 import csv
-
+from django.db.models import Exists, OuterRef, Sum
 from .recipes.models import Recipe, Tag, Ingredient
 from .serializers import RecipeSerializer, TagSerializer, IngredientSerializer
-#from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend
+from .mixins import AddRemoveMixin
 
-#from rest_framework import filters, mixins
-#from rest_framework.generics import get_object_or_404
+from .filters import RecipeFilter
 
-from .recipes.models import Recipe, Tag, Ingredient
+from .recipes.models import (
+    Recipe,
+    Tag,
+    Ingredient,
+    ShoppingCart,
+    Favorite,
+    RecipeIngredient,
+)
 from .serializers import RecipeSerializer, TagSerializer, IngredientSerializer
 from .pagination import CustomPagination
-#from .filters import RecipeFilter
-
-    #filter_backends = RecipeFilter
-    # search_fields = ("name",)
-    # filterset_fields = ["tags", "author"]
+from django.shortcuts import get_object_or_404, redirect
 
 
-
-class RecipeViewSet(viewsets.ModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
+    search_fields = ["tags__slug"]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        is_favorited = self.request.query_params.get('is_favorited')
-        author_id = self.request.query_params.get('author')
-        tags = self.request.query_params.getlist('tags')
-
-        if is_favorited is not None:
-            queryset = queryset.filter(is_favorited=self.request.user)
-        if author_id is not None:
-            queryset = queryset.filter(author__id=author_id)
+        # is_favorited = self.request.query_params.get("is_favorited")
+        author_id = self.request.query_params.get("author")
+        tags = self.request.query_params.getlist("tags")
+        user = self.request.user
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(user=user, recipe=OuterRef("pk"))
+                )
+            )
         if tags:
             queryset = queryset.filter(tags__slug__in=tags)
+        if author_id:
+            queryset = queryset.filter(author__id=author_id)
+        return queryset.order_by("id")
 
-        return queryset
-
-    @action(detail=True, methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated])
-    def favorite(self, request, pk=None):
+    @action(detail=True, methods=["GET"], url_path="get-link")
+    def get_short_link(self, request, pk=None):
         recipe = self.get_object()
-        user = request.user
+        short_link = recipe.get_or_create_short_link()
+        short_url = request.build_absolute_uri(f"/s/{short_link}")
+        return Response({"short-link": short_url}, status=status.HTTP_200_OK)
 
-        if request.method == 'POST':
-            recipe.is_favorited.add(user)
-            return Response({'status': 'added to favorites'}, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            recipe.is_favorited.remove(user)
-            return Response({'status': 'removed from favorites'}, status=status.HTTP_204_NO_CONTENT)
-
-    @action(detail=True, methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=True,
+        methods=["POST", "DELETE"],
+        url_path="shopping_cart",
+    )
     def shopping_cart(self, request, pk=None):
-        recipe = self.get_object()
-        user = request.user
+        return self.handle_add_remove(request, pk, ShoppingCart)
 
-        if request.method == 'POST':
-            recipe.shopping_cart.add(user)
-            return Response({'status': 'added to shopping cart'}, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            recipe.shopping_cart.remove(user)
-            return Response({'status': 'removed from shopping cart'}, status=status.HTTP_204_NO_CONTENT)
-
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path="download_shopping_cart",
+    )
     def download_shopping_cart(self, request):
         user = request.user
-        recipes = user.shopping_cart_recipes.all()
+        response = HttpResponse(content_type="text/plain")
 
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="shopping_cart.csv"'
+        shopping_cart = ShoppingCart.objects.filter(user=user).values_list(
+            "recipe", flat=True
+        )
 
-        writer = csv.writer(response)
-        writer.writerow(['Ingredient', 'Amount', 'Measurement Unit'])
+        ingredients_sum = (
+            RecipeIngredient.objects.filter(recipe__in=shopping_cart)
+            .values("ingredient__name", "ingredient__measurement_unit")
+            .annotate(total_amount=Sum("amount"))
+            .order_by("ingredient__name")
+        )
 
-        ingredients = {}
-        for recipe in recipes:
-            for item in recipe.ingredientsinrecipe_set.all():
-                ingredient_name = item.ingredient.name
-                if ingredient_name in ingredients:
-                    ingredients[ingredient_name]['amount'] += item.amount
-                else:
-                    ingredients[ingredient_name] = {
-                        'amount': item.amount,
-                        'measurement_unit': item.ingredient.measurement_unit,
-                    }
-
-        for ingredient, data in ingredients.items():
-            writer.writerow([ingredient, data['amount'], data['measurement_unit']])
-
+        response.write("Список покупок:\n\n".encode("utf-8"))
+        for index, item in enumerate(ingredients_sum, start=1):
+            line = (
+                f"{index}. {item['ingredient__name']} "
+                f"({item['ingredient__measurement_unit']}) - "
+                f"{item['total_amount']}\n"
+            )
+            response.write(line.encode("utf-8"))
         return response
+
+    @action(
+        detail=True,
+        methods=["POST", "DELETE"],
+        url_path="favorite",
+    )
+    def favorite(self, request, pk=None):
+        return self.handle_add_remove(request, pk, Favorite)
+
+    def redirect_short_link(request, short_id):
+        recipe = get_object_or_404(Recipe, short_link=short_id)
+        return redirect(f"/recipes/{recipe.id}")
+
 
 class TagViewSet(viewsets.ModelViewSet):
     """Представление для работы с тегами."""
@@ -116,5 +130,11 @@ class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = None
-    #filter_backends = (DjangoFilterBackend,)
-    #filterset_class = IngredientFilter
+    search_fields = ["name"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        name = self.request.query_params.get("name")
+        if name:
+            queryset = queryset.filter(name__istartswith=name)
+        return queryset
