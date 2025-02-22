@@ -3,7 +3,7 @@ import string
 
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from rest_framework.exceptions import ValidationError
@@ -14,7 +14,7 @@ from api.fields import Base64ImageField
 FoodgramUser = get_user_model()
 
 
-class CustomUserSerializer(UserCreateSerializer):
+class CustomUserSerializer(UserSerializer):
     """Сериализатор для модели User."""
 
     is_subscribed = serializers.SerializerMethodField()
@@ -42,6 +42,13 @@ class CustomUserSerializer(UserCreateSerializer):
             return False
         return Follow.objects.filter(user=user, author=obj.id).exists()
 
+    def update(self, instance, validated_data):
+        avatar = validated_data.get('avatar', None)
+        if avatar:
+            if instance.avatar:
+                instance.avatar.delete()
+            instance.avatar = avatar
+        return super().update(instance, validated_data)
 
 class CustomCreateUserSerializer(UserCreateSerializer):
     """Сериализатор для создания пользователя."""

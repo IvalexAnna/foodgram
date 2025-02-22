@@ -24,7 +24,7 @@ class FoodgramUser(AbstractUser):
     first_name = models.CharField(max_length=NAME_LENGTH, verbose_name="Имя")
     last_name = models.CharField(
         max_length=NAME_LENGTH, verbose_name="Фамилия")
-    tar = models.ImageField(
+    avatar = models.ImageField(
         upload_to='avatars/', null=True, blank=True, verbose_name="Аватар")
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
