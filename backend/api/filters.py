@@ -1,24 +1,54 @@
-from django_filters.rest_framework import BooleanFilter, FilterSet
+import django_filters
+from django.contrib.auth import get_user_model
 
-from .recipes.models import Recipe
+from recipes.models import Ingredient, Recipe, Tag
 
 
-class RecipeFilter(FilterSet):
-    is_in_shopping_cart = BooleanFilter(method="filter_is_in_shopping_cart")
-    is_favorited = BooleanFilter(method="filter_is_favorited")
+User = get_user_model()
+
+
+class LimitFilter(django_filters.FilterSet):
+    limit = django_filters.NumberFilter(method='filter_limit')
+
+    class Meta:
+        model = User
+        fields = 'limit',
+
+    def filter_limit(self, authors, name, value):
+        return authors[:int(value)] if value else authors
+
+
+class NameFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(
+        field_name='name', lookup_expr='startswith'
+    )
+
+    class Meta:
+        model = Ingredient
+        fields = 'name',
+
+
+class RecipeFilter(django_filters.FilterSet):
+    tags = django_filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tag.objects.all(),
+    )
+    is_favorited = django_filters.Filter(method='filter_is_favorited')
+    is_in_shopping_cart = django_filters.Filter(
+        method='filter_is_in_shopping_cart'
+    )
 
     class Meta:
         model = Recipe
-        fields = ["is_in_shopping_cart", "is_favorited"]
+        fields = 'author',
 
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        if user.is_authenticated and value:
-            return queryset.filter(shopping_cart__user=user)
-        return queryset
+    def filter_is_favorited(self, recipes, name, value):
+        if self.request.user.is_authenticated and value == '1':
+            return recipes.filter(favorites__user=self.request.user)
+        return recipes
 
-    def filter_is_favorited(self, queryset, name, value):
-        user = self.request.user
-        if user.is_authenticated and value:
-            return queryset.filter(favorites__user=user)
-        return queryset
+    def filter_is_in_shopping_cart(self, recipes, name, value):
+        if self.request.user.is_authenticated and value == '1':
+            return recipes.filter(shoppingcarts__user=self.request.user)
+        return recipes
