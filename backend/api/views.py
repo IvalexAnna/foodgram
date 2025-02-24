@@ -10,7 +10,7 @@ from .recipes.models import Recipe, Tag, Ingredient
 from .serializers import RecipeSerializer, TagSerializer, IngredientSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from .mixins import AddRemoveMixin
-
+from django.http import Http404
 from .filters import RecipeFilter
 
 from .recipes.models import (
@@ -40,7 +40,6 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # is_favorited = self.request.query_params.get("is_favorited")
         author_id = self.request.query_params.get("author")
         tags = self.request.query_params.getlist("tags")
         user = self.request.user
@@ -109,9 +108,7 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
     def favorite(self, request, pk=None):
         return self.handle_add_remove(request, pk, Favorite)
 
-    def redirect_short_link(request, short_id):
-        recipe = get_object_or_404(Recipe, short_link=short_id)
-        return redirect(f"/recipes/{recipe.id}")
+
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -119,7 +116,6 @@ class TagViewSet(viewsets.ModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = None
 
 
@@ -128,7 +124,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = DjangoFilterBackend,
     pagination_class = None
     search_fields = ["name"]
 
@@ -138,3 +134,9 @@ class IngredientViewSet(viewsets.ModelViewSet):
         if name:
             queryset = queryset.filter(name__istartswith=name)
         return queryset
+
+
+def redirect_short_link(request, pk):
+    if Recipe.objects.filter(pk=pk).exists():
+        return redirect(f'/recipes/{pk}')
+    raise Http404('Рецепт не найден.')
