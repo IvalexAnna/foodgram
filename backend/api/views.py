@@ -27,7 +27,7 @@ from .utils import generate_shopping_list
 from recipes.models import (
     Favorite, Ingredient, ShoppingCart, Tag, Recipe, Follow
 )
-
+from .pagination import CustomPagination
 
 User = get_user_model()
 
@@ -40,6 +40,8 @@ FILENAME = 'shopping_list({}).txt'
 SELF_SUBSCRIBE_ERROR = {'subscribe': 'Нельзя подписаться на самого себя.'}
 
 ALREADY_SUBSCRIBED_ERROR = 'Вы уже подписаны на "{}"'
+
+RECIPE_NOT_IN_FAVORITE ='Рецепт не находится в избранном'
 
 DATE_FORMAT_SHORT = 'd.m.Y'
 
@@ -66,6 +68,7 @@ class RecipeViewSet(ModelViewSet):
     http_method_names = (
         'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
     )
+    pagination = CustomPagination
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
@@ -78,15 +81,19 @@ class RecipeViewSet(ModelViewSet):
     def _handle_recipe_list_item(self, request, model):
         recipe = self.get_object()
         if request.method == 'DELETE':
-            get_object_or_404(model, user=request.user, recipe=recipe).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            try:
+                model.objects.get(user=request.user, recipe=recipe).delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            except model.DoesNotExist:
+                return Response({"error": "Рецепт не находится в списке любимых"}, status=status.HTTP_400_BAD_REQUEST)
+        
         _, created = model.objects.get_or_create(
             user=request.user, recipe=recipe
         )
         if not created:
             raise serializers.ValidationError(
-                {model.__name__: ALREADY_IN_RECIPE_LIST.format(recipe)}
-            )
+    {"error": f"Рецепт '{recipe}' уже добавлен в список любимых"})
+        
         return Response(
             RecipeListSerializer(recipe).data,
             status=status.HTTP_201_CREATED
@@ -181,11 +188,14 @@ class FoodgramUserViewSet(UserViewSet):
     )
     def create_delete_subscribe(self, request, id=None):
         author = self.get_object()
+        model = Follow
         if request.method == 'DELETE':
-            get_object_or_404(
-                Follow, user=request.user, subscribing=author
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            try:
+                model.objects.get(user=request.user, subscribing=author).delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            except model.DoesNotExist:
+                return Response({"error": "Вы не подписаны"}, status=status.HTTP_400_BAD_REQUEST)
+            
         if request.user == author:
             raise serializers.ValidationError(SELF_SUBSCRIBE_ERROR)
         _, created = Follow.objects.get_or_create(

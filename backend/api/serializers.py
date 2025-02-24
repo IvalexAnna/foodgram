@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from rest_framework import serializers
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from api.fields import Base64ImageField
-from rest_framework import serializers
+
 
 from recipes.models import (
     MIN_VALUE_AMOUNT, MIN_VALUE_COOKING_TIME, Ingredient, Recipe,
@@ -26,7 +27,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
+class RecipeIngredientCreateSerializer(serializers.Serializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(), source='ingredient'
     )
@@ -118,7 +119,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientSerializer(many=True, required=True)
+    ingredients = RecipeIngredientCreateSerializer(many=True, required=True)
     image = Base64ImageField(required=False)
     cooking_time = serializers.IntegerField(min_value=MIN_VALUE_COOKING_TIME)
 
