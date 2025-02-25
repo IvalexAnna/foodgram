@@ -4,30 +4,38 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
 from .models import (
-    Favorite, Ingredient, Recipe, Follow,
-    RecipeIngredients, ShoppingCart, Tag
+    Favorite,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredients,
+    ShoppingCart,
+    Tag,
 )
-
 
 User = get_user_model()
 
-admin.site.site_header = 'Администрирование приложения «Recipes»'
+admin.site.site_header = "Администрирование приложения «Recipes»"
 admin.site.unregister(models.Group)
 
 CHOICES = (
-    ('yes', 'Да'),
-    ('no', 'Нет'),
+    ("yes", "Да"),
+    ("no", "Нет"),
 )
 
 
 class RecipeIngredientsAdmin(admin.TabularInline):
+    """Редактирование ингредиентов рецепта."""
+
     model = RecipeIngredients
     extra = 1
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
-    title = 'Время приготовления'
-    parameter_name = 'cooking_time'
+    """Cортировка рецептов по времени приготовления"""
+
+    title = "Время приготовления"
+    parameter_name = "cooking_time"
 
     def _get_filter_recipes(self, range_name):
         return Recipe.objects.filter(
@@ -35,121 +43,143 @@ class CookingTimeFilter(admin.SimpleListFilter):
         )
 
     def lookups(self, request, model_admin):
-        cooking_times = sorted(set(
-            recipe.cooking_time for recipe in model_admin.model.objects.all()
-        ))
+        cooking_times = sorted(
+            set(recipe.cooking_time for recipe
+                in model_admin.model.objects.all()
+            )
+        )
         count = len(cooking_times)
         if count < 3:
             return
         threshold_25 = cooking_times[count // 4]
         threshold_75 = cooking_times[(count * 3) // 4]
         self.cooking_time_filters = {
-            'fast': (cooking_times[0], threshold_25 - 1),
-            'middle': (threshold_25, threshold_75 - 1),
-            'slow': (threshold_75, cooking_times[-1])
+            "fast": (cooking_times[0], threshold_25 - 1),
+            "middle": (threshold_25, threshold_75 - 1),
+            "slow": (threshold_75, cooking_times[-1]),
         }
-        fast = self._get_filter_recipes('fast').count()
-        middle = self._get_filter_recipes('middle').count()
-        slow = self._get_filter_recipes('slow').count()
+        fast = self._get_filter_recipes("fast").count()
+        middle = self._get_filter_recipes("middle").count()
+        slow = self._get_filter_recipes("slow").count()
         return (
-            ('fast', f'До {threshold_25} мин ({fast})'),
-            ('middle', f'От {threshold_25} до {threshold_75} мин ({middle})'),
-            ('slow', f'От {threshold_75} минут и более ({slow})')
+            ("fast", f"До {threshold_25} мин ({fast})"),
+            ("middle", f"От {threshold_25} до {threshold_75} мин ({middle})"),
+            ("slow", f"От {threshold_75} минут и более ({slow})"),
         )
 
     def queryset(self, request, recipes):
-        return (
-            self._get_filter_recipes(self.value()) if self.value()
-            else recipes
-        )
+        return self._get_filter_recipes(
+            self.value())if self.value() else recipes
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    """Административный интерфейс"""
+
     list_display = (
-        'id', 'name', 'cooking_time', 'author', 'tags_list',
-        'favorites_count', 'ingredients_list', 'image_thumbnail'
+        "id",
+        "name",
+        "cooking_time",
+        "author",
+        "tags_list",
+        "favorites_count",
+        "ingredients_list",
+        "image_thumbnail",
     )
-    list_display_links = ('name',)
-    search_fields = ('author__username', 'name', 'tags__name')
-    list_filter = ('tags', 'author', CookingTimeFilter)
-    readonly_fields = 'favorites_count',
+    list_display_links = ("name",)
+    search_fields = ("author__username", "name", "tags__name")
+    list_filter = ("tags", "author", CookingTimeFilter)
+    readonly_fields = ("favorites_count",)
     inlines = [RecipeIngredientsAdmin]
 
-    @admin.display(description='В избранном')
+    @admin.display(description="В избранном")
     def favorites_count(self, recipe):
         return recipe.favorites.count()
 
-    @admin.display(description='Фото')
+    @admin.display(description="Фото")
     @mark_safe
     def image_thumbnail(self, recipe):
         return f'<img src="{recipe.image.url}" width="40" height="40" />'
 
-    @admin.display(description='Тэги')
+    @admin.display(description="Тэги")
     @mark_safe
     def tags_list(self, recipe):
-        return '<br>'.join(tag.name for tag in recipe.tags.all())
+        return "<br>".join(tag.name for tag in recipe.tags.all())
 
-    @admin.display(description='Продукты')
+    @admin.display(description="Продукты")
     @mark_safe
     def ingredients_list(self, recipe):
-        return '<br>'.join(
-            f'{recipe_ingredient.ingredient.name} - {recipe_ingredient.amount}'
-            f' {recipe_ingredient.ingredient.measurement_unit}'
+        return "<br>".join(
+            f"{recipe_ingredient.ingredient.name} - {recipe_ingredient.amount}"
+            f" {recipe_ingredient.ingredient.measurement_unit}"
             for recipe_ingredient in recipe.recipe_ingredients.all()
         )
 
 
 class RecipeCountMixin:
-    @admin.display(description='Рецептов')
+    """
+    Миксин для отображения количества рецептов, связанных с моделью.
+    """
+
+    @admin.display(description="Рецептов")
     def recipe_count(self, model):
         return model.recipes.count()
 
 
 class HasRecipeFilter(admin.SimpleListFilter):
-    title = 'Есть в рецептах'
-    parameter_name = 'has_recipe'
+    """Фильтр для сортировки ингредиентов по наличию в рецептах."""
+
+    title = "Есть в рецептах"
+    parameter_name = "has_recipe"
 
     def lookups(self, request, model_admin):
         return CHOICES
 
     def queryset(self, request, ingredients):
-        if self.value() == 'yes':
+        if self.value() == "yes":
             return ingredients.filter(recipes__isnull=False).distinct()
-        elif self.value() == 'no':
+        elif self.value() == "no":
             return ingredients.filter(recipes__isnull=True)
         return ingredients
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin, RecipeCountMixin):
-    list_display = ('name', 'measurement_unit', 'recipe_count')
-    search_fields = ('name', 'measurement_unit')
-    list_filter = ('measurement_unit', HasRecipeFilter)
+    """Административный интерфейс для модели Ingredient."""
+
+    list_display = ("name", "measurement_unit", "recipe_count")
+    search_fields = ("name", "measurement_unit")
+    list_filter = ("measurement_unit", HasRecipeFilter)
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin, RecipeCountMixin):
-    list_display = ('name', 'slug', 'recipe_count')
-    search_fields = ('name', 'slug')
+    """Административный интерфейс для модели Tag."""
+
+    list_display = ("name", "slug", "recipe_count")
+    search_fields = ("name", "slug")
 
 
 @admin.register(Favorite, ShoppingCart)
 class RecipeListAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
-    search_fields = ('user',)
-    list_filter = ('user',)
+    """Административный интерфейс для моделей Favorite и ShoppingCart."""
+
+    list_display = ("user", "recipe")
+    search_fields = ("user",)
+    list_filter = ("user",)
 
 
 class RelatedObjectsFilter(admin.SimpleListFilter):
+    """Для фильтров, проверяющих наличие связанных объектов."""
+
     related_name = None
     title = None
 
     def __init__(self, request, params, model, model_admin):
         super().__init__(request, params, model, model_admin)
         self.related_filters = {
-            'yes': {f'{self.related_name}__isnull': False},
-            'no': {f'{self.related_name}__isnull': True},
+            "yes": {f"{self.related_name}__isnull": False},
+            "no": {f"{self.related_name}__isnull": True},
         }
 
     def lookups(self, request, model_admin):
@@ -164,58 +194,74 @@ class RelatedObjectsFilter(admin.SimpleListFilter):
 
 
 class HasRecipesFilter(RelatedObjectsFilter):
-    title = 'Имеет рецепты'
-    parameter_name = 'has_recipes'
-    related_name = 'recipes'
+    """Фильтр для проверки наличия рецептов у пользователя."""
+
+    title = "Имеет рецепты"
+    parameter_name = "has_recipes"
+    related_name = "recipes"
 
 
 class HasSubscriptionsFilter(RelatedObjectsFilter):
-    title = 'Имеет подписки'
-    parameter_name = 'has_subscriptions'
-    related_name = 'subscribers'
+    """Фильтр для проверки наличия подписок у пользователя."""
+
+    title = "Имеет подписки"
+    parameter_name = "has_subscriptions"
+    related_name = "subscribers"
 
 
 class HasFollowersFilter(RelatedObjectsFilter):
-    title = 'Имеет подписчиков'
-    parameter_name = 'has_subscribers'
-    related_name = 'authors'
+    """Фильтр для проверки наличия подписчиков у пользователя."""
+
+    title = "Имеет подписчиков"
+    parameter_name = "has_subscribers"
+    related_name = "authors"
 
 
 @admin.register(User)
 class FoodgramUserAdmin(UserAdmin, RecipeCountMixin):
-    fieldsets = UserAdmin.fieldsets + ((None, {'fields': ('avatar',)}),)
+    """Административный интерфейс для модели User."""
+
+    fieldsets = UserAdmin.fieldsets + ((None, {"fields": ("avatar",)}),)
     list_display = (
-        'id', 'username', 'full_name', 'email', 'avatar_thumbnail',
-        'recipe_count', 'subscriber_count', 'author_count'
+        "id",
+        "username",
+        "full_name",
+        "email",
+        "avatar_thumbnail",
+        "recipe_count",
+        "subscriber_count",
+        "author_count",
     )
-    list_display_links = ('username',)
-    search_fields = ('email', 'username')
+    list_display_links = ("username",)
+    search_fields = ("email", "username")
     list_filter = (
         HasRecipesFilter,
         HasSubscriptionsFilter,
         HasFollowersFilter,
     )
 
-    @admin.display(description='ФИО')
+    @admin.display(description="ФИО")
     def full_name(self, user):
-        return f'{user.first_name} {user.last_name}'
+        return f"{user.first_name} {user.last_name}"
 
-    @admin.display(description='Аватар')
+    @admin.display(description="Аватар")
     @mark_safe
     def avatar_thumbnail(self, user):
         if user.avatar:
             return f'<img src="{user.avatar.url}" width="40" height="40" />'
-        return ''
+        return ""
 
-    @admin.display(description='Подписок')
+    @admin.display(description="Подписок")
     def subscriber_count(self, user):
         return user.subscribers.count()
 
-    @admin.display(description='Подписчиков')
+    @admin.display(description="Подписчиков")
     def author_count(self, user):
         return user.authors.count()
 
 
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
-    list_display = ('user', 'subscribing')
+    """Административный интерфейс для модели Follow."""
+
+    list_display = ("user", "subscribing")

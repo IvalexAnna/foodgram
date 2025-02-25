@@ -1,8 +1,8 @@
 import os
-
 from pathlib import Path
+
 from django.core.management.utils import get_random_secret_key
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
@@ -21,12 +21,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'django_filters',
+    "django_filters",
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
     "api",
-    "users",
     "recipes",
 ]
 
@@ -98,39 +97,40 @@ AUTH_USER_MODEL = "recipes.FoodgramUser"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 DJOSER = {
-    'SERIALIZERS': {
-        'user': 'api.serializers.CustomUserSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
+    "SERIALIZERS": {
+        "user": "api.serializers.CustomUserSerializer",
+        "current_user": "api.serializers.CustomUserSerializer",
     },
-    'HIDE_USERS': False,
-    'PERMISSIONS': {
-        'user_list': ['rest_framework.permissions.AllowAny'],
-        'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+    "HIDE_USERS": False,
+    "PERMISSIONS": {
+        "user_list": ["rest_framework.permissions.AllowAny"],
+        "user": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
     },
-    'LOGIN_FIELD': 'email',
+    "LOGIN_FIELD": "email",
 }
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
     ],
-    'DEFAULT_PAGINATION_CLASS': 'api.pagination.CustomPagination',
-    'PAGE_SIZE': 6,
-
+    "DEFAULT_PAGINATION_CLASS": "api.pagination.CustomPagination",
+    "PAGE_SIZE": 6,
 }
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
 }
+
+CSV_FILES_DIR = os.path.join(BASE_DIR, 'data')
+
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql",
