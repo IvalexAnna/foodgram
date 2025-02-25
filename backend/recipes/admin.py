@@ -45,8 +45,7 @@ class CookingTimeFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         cooking_times = sorted(
             set(recipe.cooking_time for recipe
-                in model_admin.model.objects.all()
-            )
+                in model_admin.model.objects.all())
         )
         count = len(cooking_times)
         if count < 3:

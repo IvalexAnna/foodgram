@@ -1,12 +1,9 @@
 from api import constants
-from django.contrib.auth import get_user_model
-from django.contrib.auth import models as auth_models
 from django.contrib.auth import validators
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import UniqueConstraint
 
 
 class UserRole(models.TextChoices):
@@ -99,7 +96,8 @@ class Ingredient(models.Model):
     """Модель ингредиентов."""
 
     name = models.CharField(
-        max_length=constants.MAX_TEXT_LENGTH, verbose_name="Название ингредиента"
+        max_length=constants.MAX_TEXT_LENGTH,
+        verbose_name="Название ингредиента"
     )
     measurement_unit = models.CharField(
         max_length=constants.MAX_SLUG_LNGTH, verbose_name="Единица измерения"
@@ -147,8 +145,7 @@ class Recipe(models.Model):
         FoodgramUser, on_delete=models.CASCADE, verbose_name="Автор"
     )
     name = models.CharField(max_length=constants.NAME_LENGTH,
-                            verbose_name="Название"
-                        )
+                            verbose_name="Название")
     image = models.ImageField(upload_to="recipes/recipes", verbose_name="Фото")
     text = models.TextField("Описание")
     cooking_time = models.PositiveIntegerField(
@@ -156,8 +153,7 @@ class Recipe(models.Model):
         verbose_name="Время (мин)",
     )
     pub_date = models.DateTimeField(auto_now_add=True,
-                                    verbose_name="Дата публикации"
-                                )
+                                    verbose_name="Дата публикации")
     ingredients = models.ManyToManyField(
         Ingredient, verbose_name="Список продуктов",
         through="RecipeIngredients"

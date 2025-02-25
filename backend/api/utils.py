@@ -18,10 +18,8 @@ def generate_shopping_list(user, recipes, ingredients):
 
     return "\n".join(
         [
-            HEADER_ROW.format(user.username,
-                              date_format(date.today(),
-                                          DATE_FORMAT)
-                                        ),
+            HEADER_ROW.format(user.username, date_format(date.today(),
+                                                         DATE_FORMAT)),
             "Продукты:",
             *[
                 INGREDIENT_ROW.format(

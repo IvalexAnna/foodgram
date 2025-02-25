@@ -226,8 +226,7 @@ class FoodgramUserViewSet(UserViewSet):
         if not created:
             raise serializers.ValidationError(
                 {"subscribe": constants.ALREADY_SUBSCRIBED_ERROR.format(
-                    author)
-                }
+                    author)}
             )
         return Response(
             FollowSerializer(author, context={"request": request}).data,
