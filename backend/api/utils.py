@@ -2,38 +2,39 @@ from datetime import date
 
 from django.utils.formats import date_format
 
-HEADER_ROW = "Список продуктов пользователя {} на {}"
+from .constants import (DATE_FORMAT,
+                        HEADER_ROW,
+                        INGREDIENT_ROW,
+                        LETTER_COUNT,
+                        RECIPES_ROW
+                    )
 
-INGREDIENT_ROW = "{}. {}: {} {}"
 
-RECIPES_ROW = "{} (@{})"
-
-DATE_FORMAT = "d E Y"
-
-
-def generate_shopping_list(user, recipes, ingredients):
+def generate_shopping_list(user_data, recipe_list, ingredient_list):
     """
     Генерирует текстовый список покупок для заданных рецептов и ингредиентов.
     """
 
     return "\n".join(
         [
-            HEADER_ROW.format(user.username, date_format(date.today(),
-                                                         DATE_FORMAT)),
+            HEADER_ROW.format(user_data.username,
+                              date_format(date.today(),
+                                          DATE_FORMAT)),
             "Продукты:",
             *[
                 INGREDIENT_ROW.format(
-                    i,
+                    index,
                     ingredient.name.capitalize(),
                     ingredient.total_amount,
                     ingredient.measurement_unit,
                 )
-                for i, ingredient in enumerate(ingredients, 1)
+                for index, ingredient in enumerate(ingredient_list, 1)
             ],
             "Рецепты:",
             *[
-                RECIPES_ROW.format(recipe.name[:21], recipe.author.username)
-                for recipe in recipes
+                RECIPES_ROW.format(recipe.name[:LETTER_COUNT],
+                                   recipe.author.username)
+                for recipe in recipe_list
             ],
         ]
     )

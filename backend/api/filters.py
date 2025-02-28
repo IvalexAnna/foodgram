@@ -1,9 +1,6 @@
 import django_filters
-from django.contrib.auth import get_user_model
-from recipes.models import Ingredient, Recipe, Tag
 
-User = get_user_model()
-
+from recipes.models import Ingredient, Recipe, Tag, User
 
 class LimitFilter(django_filters.FilterSet):
     """Фильтр для ограничения количества объектов в результате запроса."""
@@ -15,7 +12,7 @@ class LimitFilter(django_filters.FilterSet):
         fields = ("limit",)
 
     def filter_limit(self, authors, name, value):
-        return authors[: int(value)] if value else authors
+        return authors[:int(value)] if value else authors
 
 
 class NameFilter(django_filters.FilterSet):

@@ -1,7 +1,6 @@
 from datetime import date
 
 from . import constants
-from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.urls import reverse
@@ -9,7 +8,7 @@ from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (
-    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag
+    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag, User
 )
 from rest_framework import serializers, status
 from rest_framework.decorators import action
@@ -32,8 +31,6 @@ from .serializers import (
     UserAvatarSerializer,
 )
 from .utils import generate_shopping_list
-
-User = get_user_model()
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):

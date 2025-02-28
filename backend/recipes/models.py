@@ -1,17 +1,10 @@
-from api import constants
-from django.contrib.auth import validators
+from django.contrib.auth import get_user_model, validators
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
-
-class UserRole(models.TextChoices):
-    """Класс для определения ролей пользователей."""
-
-    USER = "user", "Пользователь"
-    MODERATOR = "moderator", "Модератор"
-    ADMIN = "admin", "Админ"
+from api import constants
 
 
 class FoodgramUser(AbstractUser):
@@ -21,7 +14,6 @@ class FoodgramUser(AbstractUser):
         max_length=constants.NAME_LENGTH,
         verbose_name="Электронная почта",
         unique=True,
-        blank=False,
         null=False,
     )
     username = models.CharField(
@@ -43,17 +35,20 @@ class FoodgramUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
 
-    def str(self):
-        """Строковое представление модели"""
-
-        return self.username
-
     class Meta:
         """Мета-параметры модели"""
 
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
         ordering = "username", "email"
+
+    def __str__(self):
+        """Строковое представление модели"""
+
+        return self.username
+
+
+User = get_user_model()
 
 
 class Follow(models.Model):
@@ -83,8 +78,8 @@ class Follow(models.Model):
 
     def __str__(self):
         return (
-            f"{self.user.username[:21]} подписан на "
-            f"{self.subscribing.username[:21]}"
+            f"{self.user.username[:constants.LETTER_COUNT]} подписан на "
+            f"{self.subscribing.username[:constants.LETTER_COUNT]}"
         )
 
     def clean(self):
@@ -167,7 +162,7 @@ class Recipe(models.Model):
         ordering = ("-pub_date",)
 
     def __str__(self):
-        return f"{self.author} - {self.name[:21]}"
+        return f"{self.author} - {self.name[:constants.LETTER_COUNT]}"
 
 
 class RecipeIngredients(models.Model):
@@ -188,8 +183,8 @@ class RecipeIngredients(models.Model):
 
     def __str__(self):
         return (
-            f"{self.ingredient.name[:21]} - {self.amount} "
-            f"{self.ingredient.measurement_unit[:21]}"
+            f"{self.ingredient.name[:constants.LETTER_COUNT]} - {self.amount} "
+            f"{self.ingredient.measurement_unit[:constants.LETTER_COUNT]}"
         )
 
     class Meta:

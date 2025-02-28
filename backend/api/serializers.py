@@ -1,10 +1,11 @@
-from api.fields import Base64ImageField
-from django.contrib.auth import get_user_model
+from drf_extra_fields.fields import Base64ImageField
 from django.db import transaction
 from djoser.serializers import UserSerializer as DjoserUserSerializer
-from recipes.models import Follow, Ingredient, Recipe, RecipeIngredients, Tag
 from rest_framework import serializers
 
+from recipes.models import (
+    Follow, Ingredient, Recipe, RecipeIngredients, Tag, User
+)
 from .constants import (
     ITEMS_NOT_REPEAT,
     MIN_VALUE_AMOUNT,
@@ -12,8 +13,6 @@ from .constants import (
     NOT_EMPTY_FIELD,
     REQUIRED_FIELD,
 )
-
-User = get_user_model()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -151,10 +150,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return data
 
     def _validate_unique(self, items):
-        duplicates = [item for item in items if items.count(item) > 1]
+        seen = set()
+        duplicates = set()
+    
+        for item in items:
+            if item in seen:
+                duplicates.add(item)
+            seen.add(item)
+    
         if duplicates:
             raise serializers.ValidationError(
-                ITEMS_NOT_REPEAT.format(duplicates)
+                ITEMS_NOT_REPEAT.format(list(duplicates))
             )
 
     def validate_ingredients(self, recipe_ingredient_data):

@@ -1,8 +1,9 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model, models
+from django.contrib.auth import models
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 
+from api.constants import MIN_COOKING_TIME, CHOICES
 from .models import (
     Favorite,
     Follow,
@@ -11,17 +12,11 @@ from .models import (
     RecipeIngredients,
     ShoppingCart,
     Tag,
+    User
 )
-
-User = get_user_model()
 
 admin.site.site_header = "Администрирование приложения «Recipes»"
 admin.site.unregister(models.Group)
-
-CHOICES = (
-    ("yes", "Да"),
-    ("no", "Нет"),
-)
 
 
 class RecipeIngredientsAdmin(admin.TabularInline):
@@ -43,12 +38,14 @@ class CookingTimeFilter(admin.SimpleListFilter):
         )
 
     def lookups(self, request, model_admin):
-        cooking_times = sorted(
-            set(recipe.cooking_time for recipe
-                in model_admin.model.objects.all())
-        )
+        cooking_times = model_admin.model.objects.values_list(
+            'cooking_time', flat=True
+        ).distinct().order_by('cooking_time')
+        
+        cooking_times = list(cooking_times)
+        
         count = len(cooking_times)
-        if count < 3:
+        if count < MIN_COOKING_TIME:
             return
         threshold_25 = cooking_times[count // 4]
         threshold_75 = cooking_times[(count * 3) // 4]

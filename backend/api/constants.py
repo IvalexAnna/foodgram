@@ -33,3 +33,20 @@ MIN_VALUE_COOKING_TIME: int = 1
 MIN_VALUE_AMOUNT: int = 1
 
 RECIPE_NOT_FOUND = "Рецепт с id = {} не найден."
+
+HEADER_ROW = "Список продуктов пользователя {} на {}"
+
+INGREDIENT_ROW = "{}. {}: {} {}"
+
+RECIPES_ROW = "{} (@{})"
+
+DATE_FORMAT = "d E Y"
+
+LETTER_COUNT: int = 21
+
+MIN_COOKING_TIME = 3
+
+CHOICES = (
+    ("yes", "Да"),
+    ("no", "Нет"),
+)
