@@ -26,8 +26,8 @@ class Command(BaseCommand):
                 data = json.load(file)
                 for tag in data:
                     try:
-                        Tag.objects.create(
-                    name=tag["name"], slug=tag["slug"])
+                        Tag.objects.create(name=tag["name"],
+                                           slug=tag["slug"])
                     except IntegrityError:
                         print(f'Ingredient {tag["name"]} '
                               f'already added to the database')

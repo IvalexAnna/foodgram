@@ -6,8 +6,7 @@ from .constants import (DATE_FORMAT,
                         HEADER_ROW,
                         INGREDIENT_ROW,
                         LETTER_COUNT,
-                        RECIPES_ROW
-                    )
+                        RECIPES_ROW)
 
 
 def generate_shopping_list(user_data, recipe_list, ingredient_list):

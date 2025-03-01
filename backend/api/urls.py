@@ -18,4 +18,4 @@ router.register("users", FoodgramUserViewSet, basename="user")
 urlpatterns = [
     path("auth/", include("djoser.urls.authtoken")),
     path("", include(router.urls)),
-    ]
+]
