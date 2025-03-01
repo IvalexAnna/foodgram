@@ -431,14 +431,14 @@ POST /api/recipes/
 
 ***
 
-Проект развернут по IP [178.154.203.148](http://178.154.203.148/)
+Проект развернут по IP [89.169.165.212](http://89.169.165.212/)
 
 Доступ в админ-панель:
 
 ```sh
-http://178.154.203.148/admin
-login: admin (admin@food.food)
-pass: admin123
+http://89.169.165.212/admin
+login: Vakich (vak@gmail.ru)
+pass: Thailand2025
 ```
 
 ### Автор

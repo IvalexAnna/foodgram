@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 DEBUG = True
 
-ALLOWED_HOSTS = ["123.123.123.123", "localhost", "127.0.0.1", "foodyan.hopto.org"]
+ALLOWED_HOSTS = ["123.123.123.123", "localhost", "127.0.0.1", "foodyan.hopto.org", "89.169.165.212"]
 
 
 INSTALLED_APPS = [

@@ -2,6 +2,7 @@ from datetime import date
 
 from . import constants
 from django.db.models import Sum
+from django.shortcuts import redirect
 from django.http import FileResponse
 from django.urls import reverse
 from django.utils.formats import date_format
@@ -152,6 +153,16 @@ class RecipeViewSet(ModelViewSet):
                 date_format(date.today(), constants.DATE_FORMAT_SHORT)
             ),
         )
+    @action(
+        ["get"],
+        detail=False,
+        url_path="s/(?P<pk>\d+)/",
+    )
+    def redirect_recipe(self, request, pk):
+        serializer = RecipeSerializer(data={'pk': pk})
+        if serializer.is_valid():
+            return redirect(f"https://foodyan.hopto.org/recipes/{pk}/")
+        return Response(serializer.errors, status=404)
 
 
 class FoodgramUserViewSet(UserViewSet):
