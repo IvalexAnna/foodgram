@@ -157,15 +157,17 @@ class RecipeViewSet(ModelViewSet):
     @action(
         ["get"],
         detail=False,
-        url_path="s/(?P<pk>\d+)/",
+        url_path=r"s/(?P<pk>\d+)/",
     )
     def redirect_recipe(self, request, pk):
         try:
             Recipe.objects.get(pk=pk)
             return redirect(f"https://foodyan.hopto.org/recipes/{pk}/")
         except Recipe.DoesNotExist:
-            return Response({"error": "Recipe not found"},
-                             status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Recipe not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class FoodgramUserViewSet(UserViewSet):
