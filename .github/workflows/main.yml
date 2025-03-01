@@ -74,9 +74,9 @@ jobs:
       - name: Push to DockerHub
         uses: docker/build-push-action@v4
         with:
-          context: ./nginx/
+          context: ./infra/
           push: true
-          tags: ivalexanna/kittygram_gateway:latest 
+          tags: ivalexanna/foodgram_gateway:latest 
   
   deploy:
     runs-on: ubuntu-latest
@@ -107,7 +107,7 @@ jobs:
             key: ${{ secrets.SSH_KEY }}
             passphrase: ${{ secrets.SSH_PASSPHRASE }} 
             script: |
-              cd kittygram_final 
+              cd foodgram
               sudo docker compose -f docker-compose.production.yml pull 
               sudo docker compose -f docker-compose.production.yml down 
               sudo docker compose -f docker-compose.production.yml up -d 
