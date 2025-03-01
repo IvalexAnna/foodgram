@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('filename', default='tags.json', nargs='?',
                             type=str)
-    
+
     def handle(self, *args, **options):
         try:
             with open(os.path.join(DATA_ROOT, options['filename']), 'r',
@@ -27,8 +27,7 @@ class Command(BaseCommand):
                 for tag in data:
                     try:
                         Tag.objects.create(
-                    name=tag["name"], slug=tag["slug"]
-                )
+                    name=tag["name"], slug=tag["slug"])
                     except IntegrityError:
                         print(f'Ingredient {tag["name"]} '
                               f'already added to the database')

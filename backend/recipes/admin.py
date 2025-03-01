@@ -41,9 +41,7 @@ class CookingTimeFilter(admin.SimpleListFilter):
         cooking_times = model_admin.model.objects.values_list(
             'cooking_time', flat=True
         ).distinct().order_by('cooking_time')
-        
         cooking_times = list(cooking_times)
-        
         count = len(cooking_times)
         if count < MIN_COOKING_TIME:
             return

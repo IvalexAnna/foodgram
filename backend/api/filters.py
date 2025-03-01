@@ -2,6 +2,7 @@ import django_filters
 
 from recipes.models import Ingredient, Recipe, Tag, User
 
+
 class LimitFilter(django_filters.FilterSet):
     """Фильтр для ограничения количества объектов в результате запроса."""
 
@@ -35,9 +36,10 @@ class RecipeFilter(django_filters.FilterSet):
         to_field_name='slug',
         queryset=Tag.objects.all(),
     )
-
     is_favorited = django_filters.BooleanFilter(method='filter_is_favorited')
-    is_in_shopping_cart = django_filters.BooleanFilter(method='filter_is_in_shopping_cart')
+    is_in_shopping_cart = django_filters.BooleanFilter(
+        method='filter_is_in_shopping_cart'
+    )
 
     class Meta:
         model = Recipe

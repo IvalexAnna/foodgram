@@ -126,10 +126,11 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, recipe):
         return self._get_is_related(recipe, "shoppingcarts")
-    
+
     def validate_pk(self, value):
         if not Recipe.objects.filter(pk=value).exists():
-            raise serializers.ValidationError(f"Рецепт с pk={value} не существует")
+            raise serializers.ValidationError(
+                f"Рецепт с pk={value} не существует")
         return value
 
 
@@ -157,12 +158,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def _validate_unique(self, items):
         seen = set()
         duplicates = set()
-    
         for item in items:
             if item in seen:
                 duplicates.add(item)
             seen.add(item)
-    
         if duplicates:
             raise serializers.ValidationError(
                 ITEMS_NOT_REPEAT.format(list(duplicates))

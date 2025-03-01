@@ -9,7 +9,7 @@ from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (
-    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag, User
+    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag
 )
 from rest_framework import serializers, status
 from rest_framework.decorators import action
@@ -153,16 +153,15 @@ class RecipeViewSet(ModelViewSet):
                 date_format(date.today(), constants.DATE_FORMAT_SHORT)
             ),
         )
-    
+
     @action(
-    ["get"],
-    detail=False,
-    url_path="s/(?P<pk>\d+)/",
+        ["get"],
+        detail=False,
+        url_path="s/(?P<pk>\d+)/",
     )
     def redirect_recipe(self, request, pk):
         try:
-            # Проверьте, существует ли рецепт с таким ID
-            recipe = Recipe.objects.get(pk=pk)
+            Recipe.objects.get(pk=pk)
             return redirect(f"https://foodyan.hopto.org/recipes/{pk}/")
         except Recipe.DoesNotExist:
             return Response({"error": "Recipe not found"},
