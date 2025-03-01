@@ -153,16 +153,20 @@ class RecipeViewSet(ModelViewSet):
                 date_format(date.today(), constants.DATE_FORMAT_SHORT)
             ),
         )
+    
     @action(
-        ["get"],
-        detail=False,
-        url_path="s/(?P<pk>\d+)/",
+    ["get"],
+    detail=False,
+    url_path="s/(?P<pk>\d+)/",
     )
     def redirect_recipe(self, request, pk):
-        serializer = RecipeSerializer(data={'pk': pk})
-        if serializer.is_valid():
+        try:
+            # Проверьте, существует ли рецепт с таким ID
+            recipe = Recipe.objects.get(pk=pk)
             return redirect(f"https://foodyan.hopto.org/recipes/{pk}/")
-        return Response(serializer.errors, status=404)
+        except Recipe.DoesNotExist:
+            return Response({"error": "Recipe not found"},
+                             status=status.HTTP_404_NOT_FOUND)
 
 
 class FoodgramUserViewSet(UserViewSet):
