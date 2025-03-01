@@ -60,7 +60,7 @@ class CustomUserSerializer(DjoserUserSerializer):
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):
-    """Сериализатор для обновления аватара пользователя."""
+    """Сериализатор для обновления аватара."""
 
     avatar = Base64ImageField(required=True)
 
