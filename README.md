@@ -2,7 +2,7 @@
 
 **Foodgram** - продуктовый помощник.
 
-[![Django-app workflow](https://github.com/IvalexAnna)]
+[Django-app workflow](https://github.com/IvalexAnna)
 
 Пользователи **Foodgram** могут публиковать рецепты (**Recipes**), подписываться на публикации других пользователей, добавлять понравившиеся рецепты в список «Избранное», а перед походом в магазин скачивать в формате .txt сводный список продуктов (**Ingredients**), необходимых для приготовления одного или нескольких выбранных блюд.
 
@@ -104,7 +104,7 @@ docker-compose down -v
 $ git clone https://github.com/IvalexAnna/foodgram
 ```
 
-- В папке ../infra/ переименуйте файл example.env в .env и заполните своими данными:
+- В корне переименуйте файл example.env в .env и заполните своими данными:
 ```
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=postgres
@@ -125,6 +125,11 @@ SECRET_KEY=<...> # секретный ключ django-проекта из settin
 
 - Добавьте теги для для рецептов через админ-панель проекта [http://localhost/admin/](http://localhost/admin/), т.к. это поле является обязательным для сохранения рецепта и добавляется только админом.
 
+Также можно добавить теги и ингридиенты, используя команды:
+```sh
+python manage.py add_ingredients_from_data
+python manage.py add_tags_from_data
+```
 ***
 
 # Ресурсы API Foodgram
@@ -431,7 +436,7 @@ POST /api/recipes/
 
 ***
 
-Проект развернут по IP [89.169.165.212](http://89.169.165.212/)
+Проект развернут по IP [89.169.165.212](http://foodyan.hopto.org/)
 
 Доступ в админ-панель:
 
