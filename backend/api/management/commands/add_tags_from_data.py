@@ -1,28 +1,37 @@
-import csv
+import json
+import os
 
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
+from django.db.utils import IntegrityError
+from django.utils.translation import gettext as _
 
-from foodgram.settings import CSV_FILES_DIR
 from recipes.models import Tag
 
+DATA_ROOT = os.path.join(settings.BASE_DIR, 'data')
 
-# python3 manage.py utils - команда для загрузки ингредиентов
 
 class Command(BaseCommand):
     """Команда для загрузки ингредиентов в базу данных """
-
     help = 'Загрузка ингредиентов в базу данных'
 
-    def handle(self, *args, **kwargs):
-        with open(
-                f'{CSV_FILES_DIR}\\tags.csv', encoding='utf-8'
-        ) as file:
-            csv_reader = csv.reader(file, delimiter=',', quotechar='"')
-            for row in csv_reader:
-                name = row[0]
-                slug = row[1]
-                Tag.objects.create(
-                    name=name, slug=slug
+    def add_arguments(self, parser):
+        parser.add_argument('filename', default='tags.json', nargs='?',
+                            type=str)
+    
+    def handle(self, *args, **options):
+        try:
+            with open(os.path.join(DATA_ROOT, options['filename']), 'r',
+                      encoding='utf-8') as file:
+                data = json.load(file)
+                for tag in data:
+                    try:
+                        Tag.objects.create(
+                    name=tag["name"], slug=tag["slug"]
                 )
-        print('Теги в базу данных загружены')
-        print('ADD', Tag.objects.count(), 'tags')
+                    except IntegrityError:
+                        print(f'Ingredient {tag["name"]} '
+                              f'already added to the database')
+
+        except FileNotFoundError:
+            raise CommandError(_('The file is missing in the data folder'))

@@ -29,28 +29,28 @@ class NameFilter(django_filters.FilterSet):
 
 
 class RecipeFilter(django_filters.FilterSet):
-    """Фильтр для рецептов"""
 
     tags = django_filters.ModelMultipleChoiceFilter(
-        field_name="tags__slug",
-        to_field_name="slug",
+        field_name='tags__slug',
+        to_field_name='slug',
         queryset=Tag.objects.all(),
     )
-    is_favorited = django_filters.Filter(method="filter_is_favorited")
-    is_in_shopping_cart = django_filters.Filter(
-        method="filter_is_in_shopping_cart"
-    )
+
+    is_favorited = django_filters.BooleanFilter(method='filter_is_favorited')
+    is_in_shopping_cart = django_filters.BooleanFilter(method='filter_is_in_shopping_cart')
 
     class Meta:
         model = Recipe
-        fields = ("author",)
+        fields = ('tags', 'author',)
 
-    def filter_is_favorited(self, recipes, name, value):
-        if self.request.user.is_authenticated and value == "1":
-            return recipes.filter(favorites__user=self.request.user)
-        return recipes
+    def filter_is_favorited(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(favorites__user=user)
+        return queryset
 
-    def filter_is_in_shopping_cart(self, recipes, name, value):
-        if self.request.user.is_authenticated and value == "1":
-            return recipes.filter(shoppingcarts__user=self.request.user)
-        return recipes
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(shopping_cart__user=user)
+        return queryset

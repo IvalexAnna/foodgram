@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["123.123.123.123", "localhost", "127.0.0.1", "foodyan.hopto.org"]
 
 
 INSTALLED_APPS = [
@@ -122,42 +122,16 @@ REST_FRAMEWORK = {
 }
 
 
+CSV_FILES_DIR = os.path.join(BASE_DIR, 'data')
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "django"),
+        "USER": os.getenv("POSTGRES_USER", "django_user"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
+        "HOST": os.getenv("DB_HOST", "db"),
+        "PORT": int(os.getenv("DB_PORT", 5432)),
     }
 }
 
-CSV_FILES_DIR = os.path.join(BASE_DIR, 'data')
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.getenv("POSTGRES_DB", "django"),
-#         "USER": os.getenv("POSTGRES_USER", "django_user"),
-#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
-#         "HOST": os.getenv("DB_HOST", "db"),
-#         "PORT": int(os.getenv("DB_PORT", 5432)),
-#     }
-# }
-
-
-# if os.getenv('SQLITE', True) == 'True':
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#         }
-#     }
-# else:
-#     DATABASES = {
-#         "default": {
-#             "ENGINE": "django.db.backends.postgresql",
-#             "NAME": os.getenv("POSTGRES_DB", "django"),
-#             "USER": os.getenv("POSTGRES_USER", "django_user"),
-#             "PASSWORD": os.getenv("POSTGRES_PASSWORD", "mysecretpassword"),
-#             "HOST": os.getenv("DB_HOST", "db"),
-#             "PORT": int(os.getenv("DB_PORT", 5432)),
-#         }
-#     }
