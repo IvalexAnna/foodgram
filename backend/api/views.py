@@ -157,7 +157,7 @@ class RecipeViewSet(ModelViewSet):
     @action(
         ["get"],
         detail=False,
-        url_path=r"s/(?P<pk>\d+)/",
+        url_path="s/(?P<pk>\d+)/",
     )
     def redirect_recipe(self, request, pk):
         try:
