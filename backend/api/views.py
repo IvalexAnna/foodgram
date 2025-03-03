@@ -156,7 +156,7 @@ class RecipeViewSet(ModelViewSet):
         )
 
     @require_GET
-    def url_redirect(self, url_slug): #было реквест
+    def url_redirect(request, url_slug):
         url = get_object_or_404(UrlData, url_slug=url_slug).original_url
         return redirect(url)
 
