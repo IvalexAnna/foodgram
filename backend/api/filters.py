@@ -3,17 +3,17 @@ import django_filters
 from recipes.models import Ingredient, Recipe, Tag, User
 
 
-# class LimitFilter(django_filters.FilterSet):
-#     """Фильтр для ограничения количества объектов в результате запроса."""
+class LimitFilter(django_filters.FilterSet):
+    """Фильтр для ограничения количества объектов в результате запроса."""
 
-#     limit = django_filters.NumberFilter(method="filter_limit")
+    limit = django_filters.NumberFilter(method="filter_limit")
 
-#     class Meta:
-#         model = User
-#         fields = ("limit",)
+    class Meta:
+        model = User
+        fields = ("limit",)
 
-#     def filter_limit(self, authors, name, value):
-#         return authors[:int(value)] if value else authors
+    def filter_limit(self, authors, name, value):
+        return authors[:int(value)] if value else authors
 
 
 class NameFilter(django_filters.FilterSet):

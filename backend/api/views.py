@@ -169,7 +169,7 @@ class FoodgramUserViewSet(UserViewSet):
     """Представление для модели User."""
 
     filter_backends = (DjangoFilterBackend,)
-    #filterset_class = LimitFilter
+    filterset_class = LimitFilter
 
     def get_permissions(self):
         if self.action == "me":
