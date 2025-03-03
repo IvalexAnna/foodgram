@@ -125,13 +125,16 @@ class RecipeViewSet(ModelViewSet):
             raise serializers.ValidationError(
                 constants.RECIPE_NOT_EXIST.format(pk)
             )
+        url_data, created = UrlData.objects.get_or_create(
+        original_url=request.build_absolute_uri(reverse("recipe-detail", args=[pk]))
+    )
         return Response(
-            {
-                "short-link": request.build_absolute_uri(
-                    reverse("short-link", args=(pk,))
-                )
-            }
-        )
+        {
+            "short-link": request.build_absolute_uri(
+                reverse("url_redirect", args=[url_data.url_slug])
+            )
+        }
+    )
 
     @action(
         ["get"],
@@ -154,6 +157,7 @@ class RecipeViewSet(ModelViewSet):
                 date_format(date.today(), constants.DATE_FORMAT_SHORT)
             ),
         )
+
 
 @require_GET
 def url_redirect(request, url_slug):
