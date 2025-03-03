@@ -1,3 +1,5 @@
+import random
+import string
 from django.contrib.auth import get_user_model, validators
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
@@ -50,6 +52,26 @@ class FoodgramUser(AbstractUser):
 
 User = get_user_model()
 
+class UrlData(models.Model):
+    original_url = models.CharField(max_length=constants.MAX_TEXT_LENGTH)
+    url_slug = models.CharField(max_length=constants.LETTER_COUNT)
+
+    def save(self, *args, **kwargs):
+        if not self.url_slug:
+            self.url_slug = self._generate_slug()
+        super(UrlData, self).save(*args, **kwargs)
+
+    def _generate_slug(self):
+        characters = string.ascii_letters + string.digits
+        while True:
+            url_slug = ''.join(random.choices(
+                characters, k=constants.LETTER_COUNT))
+            if not UrlData.objects.filter(url_slug=url_slug).exists():
+                break
+        return url_slug
+
+    def __str__(self):
+        return f"Короткая ссылка для: {self.original_url} -> {self.url_slug}"
 
 class Follow(models.Model):
     """Модель подписчика."""
@@ -217,7 +239,7 @@ class UserRecipeBaseModel(models.Model):
         default_related_name = "%(class)ss"
 
     def __str__(self):
-        return f"У {self.user.username[:21]} в списке {self.recipe}"
+        return f"У {self.user.username[:constants.LETTER_COUNT]} в списке {self.recipe}"
 
 
 class Favorite(UserRecipeBaseModel):

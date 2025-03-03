@@ -1,9 +1,7 @@
 from django.urls import path
 
-from api.views import RecipeViewSet
+from . import views
 
 urlpatterns = [
-
-    path("s/<int:pk>/", RecipeViewSet.as_view(
-        {"get": "redirect_recipe"}), name="short-link"),
+    path("s/<slug:url_slug>/", views.url_redirect, name="url_redirect"),
 ]

@@ -2,14 +2,15 @@ from datetime import date
 
 from . import constants
 from django.db.models import Sum
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_GET
 from django.http import FileResponse
 from django.urls import reverse
 from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (
-    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag
+    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag, UrlData
 )
 from rest_framework import serializers, status
 from rest_framework.decorators import action
@@ -154,20 +155,10 @@ class RecipeViewSet(ModelViewSet):
             ),
         )
 
-    @action(
-        ["get"],
-        detail=False,
-        url_path=r"s/(?P<pk>\d+)/",
-    )
-    def redirect_recipe(self, request, pk):
-        try:
-            Recipe.objects.get(pk=pk)
-            return redirect(f"https://foodyan.hopto.org/recipes/{pk}/")
-        except Recipe.DoesNotExist:
-            return Response(
-                {"error": "Recipe not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+    @require_GET
+    def url_redirect(self, url_slug): #было реквест
+        url = get_object_or_404(UrlData, url_slug=url_slug).original_url
+        return redirect(url)
 
 
 class FoodgramUserViewSet(UserViewSet):

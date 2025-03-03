@@ -243,7 +243,7 @@ class FollowSerializer(CustomUserSerializer):
     def get_recipes(self, author):
         return RecipeListSerializer(
             author.recipes.all()[
-                : int(self.context.get(
+                :int(self.context.get(
                     "request").GET.get("recipes_limit", 10**10)
                 )
             ],
