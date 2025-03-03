@@ -130,7 +130,7 @@ class RecipeViewSet(ModelViewSet):
     )
         return Response(
         {
-            "short-link": request.build_absolute_uri(
+            "url_redirect": request.build_absolute_uri(
                 reverse("url_redirect", args=[url_data.url_slug])
             )
         }
