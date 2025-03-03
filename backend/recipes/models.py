@@ -53,7 +53,7 @@ class FoodgramUser(AbstractUser):
 User = get_user_model()
 
 class UrlData(models.Model):
-    """Модель короткой ссылки"""
+    """Модель короткой ссылки."""
 
     original_url = models.CharField(max_length=constants.MAX_TEXT_LENGTH)
     url_slug = models.CharField(max_length=constants.LETTER_COUNT)
@@ -74,6 +74,7 @@ class UrlData(models.Model):
 
     def __str__(self):
         return f"Короткая ссылка для: {self.original_url} -> {self.url_slug}"
+
 
 class Follow(models.Model):
     """Модель подписчика."""

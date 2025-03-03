@@ -121,20 +121,19 @@ class RecipeViewSet(ModelViewSet):
         url_path="get-link",
     )
     def get_link(self, request, pk):
-        if not self.get_queryset().filter(pk=pk).exists():
-            raise serializers.ValidationError(
-                constants.RECIPE_NOT_EXIST.format(pk)
-            )
-        url_data, created = UrlData.objects.get_or_create(
-        original_url=request.build_absolute_uri(reverse("recipe-detail", args=[pk]))
-    )
-        return Response(
-        {
-            "url_redirect": request.build_absolute_uri(
-                reverse("url_redirect", args=[url_data.url_slug])
-            )
-        }
-    )
+        # Получить текущий URL
+        current_url_path = request.path.rsplit('/', 2)[0]
+        current_url = request.build_absolute_uri(current_url_path)
+        # Создать или получить существующий объект UrlData
+        url_data, created = UrlData.objects.get_or_create(original_url=current_url)
+
+        # Если объект создан, сгенерировать короткую ссылку
+        if created:
+            url_data.save()  # Вызовется автоматически при создании, но для ясности
+
+        # Вернуть короткую ссылку
+        short_url = f"{request.build_absolute_uri('/')}{url_data.url_slug}"
+        return Response({'short_url': short_url}, status=status.HTTP_200_OK)
 
     @action(
         ["get"],
