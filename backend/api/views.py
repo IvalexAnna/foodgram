@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from urllib.parse import urlparse
 from recipes.models import (
     Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag, UrlData
 )
@@ -121,10 +122,13 @@ class RecipeViewSet(ModelViewSet):
         url_path="get-link",
     )
     def get_link(self, request, pk):
-        current_url_path = request.path.rsplit('/', 2)[0]
-        current_url = request.build_absolute_uri(current_url_path)
+        current_url = request.build_absolute_uri(request.path)
+        parsed_url = urlparse(current_url)
+        path_without_api = parsed_url.path.replace('/api/', '/')
+        new_url = f"{parsed_url.scheme}://{parsed_url.netloc}{path_without_api}"
+
         url_data, created = UrlData.objects.get_or_create(
-            original_url=current_url
+            original_url=new_url
         )
         if created:
             url_data.save()
