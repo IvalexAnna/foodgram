@@ -14,6 +14,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["123.123.123.123", "localhost", "127.0.0.1", "foodyan.hopto.org", "89.169.165.212"]
 
+BASE_URL = os.getenv('BASE_URL')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
