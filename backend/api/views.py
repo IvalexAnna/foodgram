@@ -128,7 +128,7 @@ class RecipeViewSet(ModelViewSet):
         )
         if created:
             url_data.save()
-        short_url = f"{request.build_absolute_uri('/')}{url_data.url_slug}"
+        short_url = f"{request.build_absolute_uri('/')[:-1]}/s/{url_data.url_slug}"
         return Response({"short-link": short_url}, status=status.HTTP_200_OK)
 
     @action(
