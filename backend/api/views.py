@@ -123,7 +123,9 @@ class RecipeViewSet(ModelViewSet):
     )
     def get_link(self, request, pk):
         path_parts = request.path.split('/')
-        path_parts = [part for part in path_parts if part not in ['api', 'get-link']]
+        path_parts = [part for part in path_parts if part not in [
+            'api', 'get-link']
+        ]
         new_path = '/'.join(path_parts[1:])
         new_url = f"{settings.HOST}{new_path}"
         url_data, created = UrlData.objects.get_or_create(original_url=new_url)
