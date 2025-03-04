@@ -214,7 +214,7 @@ class UserRecipeBaseModel(models.Model):
             )
         ]
         abstract = True
-        default_related_name = "%(class)s"
+        default_related_name = "%(class)ss"
 
     def __str__(self):
         return f"У {self.user.username[:constants.LETTER_COUNT]} в списке {self.recipe}"
