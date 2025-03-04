@@ -127,7 +127,7 @@ class RecipeViewSet(ModelViewSet):
             'api', 'get-link']
         ]
         new_path = '/'.join(path_parts[1:])
-        new_url = f"{settings.HOST}{new_path}"
+        new_url = f"{settings.HOST}/{new_path}"
         url_data, created = UrlData.objects.get_or_create(original_url=new_url)
         if created:
             url_data.save()
