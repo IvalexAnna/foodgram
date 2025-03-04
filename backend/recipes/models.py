@@ -223,6 +223,13 @@ class UserRecipeBaseModel(models.Model):
 class Favorite(UserRecipeBaseModel):
     """Модель избранного"""
 
+    user = models.ForeignKey(
+        FoodgramUser,
+        on_delete=models.CASCADE,
+        related_name="favorites",
+        verbose_name="Пользователь",
+    )
+
     class Meta(UserRecipeBaseModel.Meta):
         verbose_name = "Избранное"
         verbose_name_plural = "Избранное"
@@ -230,6 +237,13 @@ class Favorite(UserRecipeBaseModel):
 
 class ShoppingCart(UserRecipeBaseModel):
     """Модель списка покупок"""
+
+    user = models.ForeignKey(
+        FoodgramUser,
+        on_delete=models.CASCADE,
+        related_name="shopping_carts",
+        verbose_name="Пользователь",
+    )
 
     class Meta(UserRecipeBaseModel.Meta):
         verbose_name = "Списки покупок"
