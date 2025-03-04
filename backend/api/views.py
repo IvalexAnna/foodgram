@@ -125,7 +125,9 @@ class RecipeViewSet(ModelViewSet):
         current_url_path = request.path.rsplit('/', 2)[0]
         current_url = request.build_absolute_uri(current_url_path)
         # Создать или получить существующий объект UrlData
-        url_data, created = UrlData.objects.get_or_create(original_url=current_url)
+        url_data, created = UrlData.objects.get_or_create(
+            original_url=current_url
+        )
 
         # Если объект создан, сгенерировать короткую ссылку
         if created:
