@@ -11,7 +11,7 @@ router = DefaultRouter()
 
 router.register("ingredients", IngredientViewSet, basename="ingredient")
 router.register("tags", TagViewSet, basename="tag")
-router.register("recipes", RecipeViewSet, basename="recipes")
+router.register(r"recipes", RecipeViewSet, basename="recipes")
 router.register("users", FoodgramUserViewSet, basename="user")
 
 
