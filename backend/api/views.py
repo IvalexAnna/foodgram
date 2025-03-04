@@ -121,21 +121,15 @@ class RecipeViewSet(ModelViewSet):
         url_path="get-link",
     )
     def get_link(self, request, pk):
-        # Получить текущий URL
         current_url_path = request.path.rsplit('/', 2)[0]
         current_url = request.build_absolute_uri(current_url_path)
-        # Создать или получить существующий объект UrlData
         url_data, created = UrlData.objects.get_or_create(
             original_url=current_url
         )
-
-        # Если объект создан, сгенерировать короткую ссылку
         if created:
-            url_data.save()  # Вызовется автоматически при создании, но для ясности
-
-        # Вернуть короткую ссылку
+            url_data.save()
         short_url = f"{request.build_absolute_uri('/')}{url_data.url_slug}"
-        return Response({'short_url': short_url}, status=status.HTTP_200_OK)
+        return Response({"short-link": short_url}, status=status.HTTP_200_OK)
 
     @action(
         ["get"],
