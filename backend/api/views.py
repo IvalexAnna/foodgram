@@ -1,17 +1,15 @@
 from datetime import date
+import hashids
 
-from . import constants
 from django.db.models import Sum
 from django.conf import settings
-from django.shortcuts import get_object_or_404, redirect
-from django.views.decorators.http import require_GET
-from django.http import FileResponse
+from django.shortcuts import redirect
+from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from urllib.parse import urlparse
 from recipes.models import (
-    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag, UrlData
+    Favorite, Follow, Ingredient, Recipe, ShoppingCart, Tag
 )
 from rest_framework import serializers, status
 from rest_framework.decorators import action
@@ -34,6 +32,7 @@ from .serializers import (
     UserAvatarSerializer,
 )
 from .utils import generate_shopping_list
+from . import constants
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -117,50 +116,27 @@ class RecipeViewSet(ModelViewSet):
         return self._handle_recipe_list_item(request, ShoppingCart)
 
     @action(
-        ["get"],
         detail=True,
-        url_path="get-link",
+        methods=['get'],
+        url_path='get-link'
     )
-    def get_link(self, request, pk):
-        path_parts = request.path.split('/')
-        path_parts = [part for part in path_parts if part not in [
-            'api', 'get-link']
-        ]
-        new_path = '/'.join(path_parts[1:])
-        new_url = f"{settings.HOST}/{new_path}"
-        url_data, created = UrlData.objects.get_or_create(original_url=new_url)
-        if created:
-            url_data.save()
-        short_url = f"{request.build_absolute_uri('/')[:-1]}/s/{url_data.url_slug}"
-        return Response({"short-link": short_url}, status=status.HTTP_200_OK)
-
-    @action(
-        ["get"],
-        detail=False,
-        url_path="download_shopping_cart",
-        permission_classes=[IsAuthenticated],
-    )
-    def download_shopping_cart(self, request):
-        recipes = Recipe.objects.filter(shoppingcarts__user=request.user)
-        ingredients = (
-            Ingredient.objects.filter(recipes__in=recipes)
-            .annotate(total_amount=Sum("recipe_ingredients__amount"))
-            .order_by("name")
-        )
-        return FileResponse(
-            generate_shopping_list(request.user, recipes, ingredients),
-            content_type="text/plain; charset=utf-8",
-            as_attachment=True,
-            filename=constants.FILENAME.format(
-                date_format(date.today(), constants.DATE_FORMAT_SHORT)
-            ),
-        )
+    def get_link(self, request, pk=None):
+        recipe = self.get_object()
+        hashid = hashids.Hashids(salt='random_salt', min_length=8)
+        short_id = hashid.encode(recipe.id)
+        short_link = f'{settings.BASE_URL}/s/{short_id}'
+        return Response({'short-link': short_link})
 
 
-@require_GET
-def url_redirect(request, url_slug):
-    url = get_object_or_404(UrlData, url_slug=url_slug).original_url
-    return redirect(url)
+def redirect_to_recipe(request, short_id):
+    hashid = hashids.Hashids(salt='random_salt', min_length=8)
+    decoded_id = hashid.decode(short_id)
+
+    if decoded_id:
+        recipe_id = decoded_id[0]
+        return redirect(f'/recipes/{recipe_id}/')
+
+    return HttpResponseNotFound('Рецепт не найден')
 
 
 class FoodgramUserViewSet(UserViewSet):

@@ -12,13 +12,11 @@ from .models import (
     RecipeIngredients,
     ShoppingCart,
     Tag,
-    UrlData,
     User
 )
 
 admin.site.site_header = "Администрирование приложения «Recipes»"
 admin.site.unregister(models.Group)
-admin.site.register(UrlData)
 
 class RecipeIngredientsAdmin(admin.TabularInline):
     """Редактирование ингредиентов рецепта."""
