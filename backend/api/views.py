@@ -2,10 +2,10 @@ from datetime import date
 
 from . import constants
 from django.db.models import Sum
+from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_GET
 from django.http import FileResponse
-from django.urls import reverse
 from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -122,14 +122,11 @@ class RecipeViewSet(ModelViewSet):
         url_path="get-link",
     )
     def get_link(self, request, pk):
-        current_url = request.build_absolute_uri(request.path)
-        parsed_url = urlparse(current_url)
-        path_without_api = parsed_url.path.replace('/api/', '/')
-        new_url = f"{parsed_url.scheme}://{parsed_url.netloc}{path_without_api}"
-
-        url_data, created = UrlData.objects.get_or_create(
-            original_url=new_url
-        )
+        path_parts = request.path.split('/')
+        path_parts = [part for part in path_parts if part not in ['api', 'get-link']]
+        new_path = '/'.join(path_parts[1:])
+        new_url = f"{settings.HOST}{new_path}"
+        url_data, created = UrlData.objects.get_or_create(original_url=new_url)
         if created:
             url_data.save()
         short_url = f"{request.build_absolute_uri('/')[:-1]}/s/{url_data.url_slug}"
