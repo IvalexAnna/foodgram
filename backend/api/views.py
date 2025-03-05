@@ -59,8 +59,8 @@ class RecipeViewSet(ModelViewSet):
 
     queryset = Recipe.objects.all()
     permission_classes = IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = RecipeFilter
+    #filter_backends = (DjangoFilterBackend,)
+    #filterset_class = RecipeFilter
     http_method_names = (
         "get", "post", "patch", "delete", "head", "options", "trace"
     )
