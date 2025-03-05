@@ -128,6 +128,28 @@ class RecipeViewSet(ModelViewSet):
         short_link = f'{settings.BASE_URL}/s/{short_id}'
         return Response({'short-link': short_link})
 
+    @action(
+        ["get"],
+        detail=False,
+        url_path="download_shopping_cart",
+        permission_classes=[IsAuthenticated],
+    )
+    def download_shopping_cart(self, request):
+        recipes = Recipe.objects.filter(shoppingcarts__user=request.user)
+        ingredients = (
+            Ingredient.objects.filter(recipes__in=recipes)
+            .annotate(total_amount=Sum("recipe_ingredients__amount"))
+            .order_by("name")
+        )
+        return FileResponse(
+            generate_shopping_list(request.user, recipes, ingredients),
+            content_type="text/plain; charset=utf-8",
+            as_attachment=True,
+            filename=constants.FILENAME.format(
+                date_format(date.today(), constants.DATE_FORMAT_SHORT)
+            ),
+        )
+
 
 def redirect_to_recipe(request, short_id):
     hashid = hashids.Hashids(salt='random_salt', min_length=8)
@@ -214,25 +236,4 @@ class FoodgramUserViewSet(UserViewSet):
         return Response(
             FollowSerializer(author, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
-        )
-    @action(
-        ["get"],
-        detail=False,
-        url_path="download_shopping_cart",
-        permission_classes=[IsAuthenticated],
-    )
-    def download_shopping_cart(self, request):
-        recipes = Recipe.objects.filter(shoppingcarts__user=request.user)
-        ingredients = (
-            Ingredient.objects.filter(recipes__in=recipes)
-            .annotate(total_amount=Sum("recipe_ingredients__amount"))
-            .order_by("name")
-        )
-        return FileResponse(
-            generate_shopping_list(request.user, recipes, ingredients),
-            content_type="text/plain; charset=utf-8",
-            as_attachment=True,
-            filename=constants.FILENAME.format(
-                date_format(date.today(), constants.DATE_FORMAT_SHORT)
-            ),
         )
