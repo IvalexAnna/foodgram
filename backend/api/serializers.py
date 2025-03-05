@@ -253,4 +253,4 @@ class FollowSerializer(CustomUserSerializer):
         ).data
 
     def get_cart_recipes_count(self, author):
-        return ShoppingCart.objects.filter(user=author).count()
+        return len(set(ShoppingCart.objects.filter(user=author).values_list('recipe', flat=True)))
