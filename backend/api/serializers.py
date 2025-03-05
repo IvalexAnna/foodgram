@@ -4,7 +4,7 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    Follow, Ingredient, Recipe, RecipeIngredients, ShoppingCart, Tag, User
+    Follow, Ingredient, Recipe, RecipeIngredients, Tag, User
 )
 from .constants import (
     ITEMS_NOT_REPEAT,
@@ -231,19 +231,18 @@ class RecipeListSerializer(serializers.ModelSerializer):
 class FollowSerializer(CustomUserSerializer):
     """Сериализатор для модели Follow."""
 
-    cart_recipes = serializers.SerializerMethodField()
-    cart_recipes_count = serializers.IntegerField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(source="recipes.count")
 
     class Meta(CustomUserSerializer.Meta):
         fields = (
-            *CustomUserSerializer.Meta.fields, "cart_recipes", "cart_recipes_count"
+            *CustomUserSerializer.Meta.fields, "recipes", "recipes_count"
         )
         read_only_fields = fields
 
-    def get_cart_recipes(self, author):
-        cart_recipes = ShoppingCart.objects.filter(user=author).values_list('recipe', flat=True)
+    def get_recipes(self, author):
         return RecipeListSerializer(
-            Recipe.objects.filter(id__in=cart_recipes)[
+            author.recipes.all()[
                 :int(self.context.get(
                     "request").GET.get("recipes_limit", 10**10)
                 )
@@ -251,6 +250,3 @@ class FollowSerializer(CustomUserSerializer):
             many=True,
             read_only=True,
         ).data
-
-    def get_cart_recipes_count(self, author):
-        return len(set(ShoppingCart.objects.filter(user=author).values_list('recipe', flat=True)))
