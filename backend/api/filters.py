@@ -1,52 +1,12 @@
-
-from django_filters import rest_framework as filters
+import django_filters
 
 from recipes.models import Ingredient, Recipe, Tag, User
 
 
-class RecipeFilter(filters.FilterSet):
-    """
-    Определяет параметры фильтрации для рецептов.
-    """
-
-    tags = filters.ModelMultipleChoiceFilter(
-        field_name='tags__slug',
-        to_field_name='slug',
-        queryset=Tag.objects.all(),
-        conjoined=False
-    )
-    is_favorited = filters.BooleanFilter(
-        method='filter_is_favorited'
-    )
-    is_in_shopping_cart = filters.BooleanFilter(
-        method='filter_is_in_shopping_cart'
-    )
-
-    class Meta:
-        model = Recipe
-        fields = ['author', 'tags', 'is_favorited', 'is_in_shopping_cart']
-
-    def filter_is_favorited(self, queryset, name, value):
-        user = self.request.user
-        if value:
-            if user.is_anonymous:
-                return queryset.none()
-            return queryset.filter(favorited_by__user=user)
-        return queryset
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        if value:
-            if user.is_anonymous:
-                return queryset.none()
-            return queryset.filter(in_shopping_cart__user=user)
-        return queryset
-
-
-class LimitFilter(filters.FilterSet):
+class LimitFilter(django_filters.FilterSet):
     """Фильтр для ограничения количества объектов в результате запроса."""
 
-    limit = filters.NumberFilter(method="filter_limit")
+    limit = django_filters.NumberFilter(method="filter_limit")
 
     class Meta:
         model = User
@@ -56,10 +16,10 @@ class LimitFilter(filters.FilterSet):
         return authors[:int(value)] if value else authors
 
 
-class NameFilter(filters.FilterSet):
+class NameFilter(django_filters.FilterSet):
     """Фильтр для поиска ингредиентов по имени."""
 
-    name = filters.CharFilter(
+    name = django_filters.CharFilter(
         field_name="name",
         lookup_expr="startswith"
     )
@@ -67,3 +27,32 @@ class NameFilter(filters.FilterSet):
     class Meta:
         model = Ingredient
         fields = ("name",)
+
+
+class RecipeFilter(django_filters.FilterSet):
+
+    tags = django_filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tag.objects.all(),
+    )
+    is_favorited = django_filters.BooleanFilter(method='filter_is_favorited')
+    is_in_shopping_cart = django_filters.BooleanFilter(
+        method='filter_is_in_shopping_cart'
+    )
+
+    class Meta:
+        model = Recipe
+        fields = ('tags', 'author',)
+
+    def filter_is_favorited(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(favorites__user=user)
+        return queryset
+
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(shopping_cart__user=user)
+        return queryset
