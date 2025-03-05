@@ -193,58 +193,114 @@ class RecipeIngredients(models.Model):
         default_related_name = "recipe_ingredients"
 
 
-class UserRecipeBaseModel(models.Model):
-    """Модель для связей между пользователями и рецептами."""
+class Favorite(models.Model):
 
     user = models.ForeignKey(
         FoodgramUser,
-        on_delete=models.CASCADE,
-        verbose_name="Пользователь",
+        on_delete=models.CASCADE, related_name='favorites',
+        verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name="Рецепт",
+        Recipe, on_delete=models.CASCADE,
+        related_name='favorited_by',
+        verbose_name='Рецепт'
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "recipe"], name="%(class)s_unique_user_recipe"
+                fields=('user', 'recipe'),
+                name='unique_favorite',
             )
         ]
-        abstract = True
-        default_related_name = "%(class)ss"
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self):
-        return f"У {self.user.username[:constants.LETTER_COUNT]} в списке {self.recipe}"
+        return f'{self.user} - {self.recipe}'
 
 
-class Favorite(UserRecipeBaseModel):
-    """Модель избранного"""
-
-    user = models.ForeignKey(
-        FoodgramUser,
-        on_delete=models.CASCADE,
-        related_name="favorites",
-        verbose_name="Пользователь",
-    )
-
-    class Meta(UserRecipeBaseModel.Meta):
-        verbose_name = "Избранное"
-        verbose_name_plural = "Избранное"
-
-
-class ShoppingCart(UserRecipeBaseModel):
-    """Модель списка покупок"""
+class ShoppingCart(models.Model):
 
     user = models.ForeignKey(
         FoodgramUser,
         on_delete=models.CASCADE,
-        related_name="shopping_carts",
-        verbose_name="Пользователь",
+        related_name='shopping_cart',
+        verbose_name='Пользователь'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE,
+        related_name='in_shopping_cart',
+        verbose_name='Рецепт'
     )
 
-    class Meta(UserRecipeBaseModel.Meta):
-        verbose_name = "Списки покупок"
-        verbose_name_plural = "Список покупок"
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_shopping_cart',
+            )
+        ]
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
+
+        def __str__(self):
+            return f'{self.user} - {self.recipe}'
+
+
+
+# class UserRecipeBaseModel(models.Model):
+#     """Модель для связей между пользователями и рецептами."""
+
+#     user = models.ForeignKey(
+#         FoodgramUser,
+#         on_delete=models.CASCADE,
+#         verbose_name="Пользователь",
+#     )
+#     recipe = models.ForeignKey(
+#         Recipe,
+#         on_delete=models.CASCADE,
+#         verbose_name="Рецепт",
+#     )
+
+#     class Meta:
+#         constraints = [
+#             models.UniqueConstraint(
+#                 fields=["user", "recipe"], name="%(class)s_unique_user_recipe"
+#             )
+#         ]
+#         abstract = True
+#         default_related_name = "%(class)ss"
+
+#     def __str__(self):
+#         return f"У {self.user.username[:constants.LETTER_COUNT]} в списке {self.recipe}"
+
+
+# class Favorite(UserRecipeBaseModel):
+#     """Модель избранного"""
+
+#     user = models.ForeignKey(
+#         FoodgramUser,
+#         on_delete=models.CASCADE,
+#         related_name="favorites",
+#         verbose_name="Пользователь",
+#     )
+
+#     class Meta(UserRecipeBaseModel.Meta):
+#         verbose_name = "Избранное"
+#         verbose_name_plural = "Избранное"
+
+
+# class ShoppingCart(UserRecipeBaseModel):
+#     """Модель списка покупок"""
+
+#     user = models.ForeignKey(
+#         FoodgramUser,
+#         on_delete=models.CASCADE,
+#         related_name="shopping_carts",
+#         verbose_name="Пользователь",
+#     )
+
+#     class Meta(UserRecipeBaseModel.Meta):
+#         verbose_name = "Списки покупок"
+#         verbose_name_plural = "Список покупок"
