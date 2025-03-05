@@ -241,12 +241,10 @@ class FollowSerializer(CustomUserSerializer):
         read_only_fields = fields
 
     def get_recipes(self, author):
-        return RecipeListSerializer(
-            author.recipes.all()[
-                :int(self.context.get(
-                    "request").GET.get("recipes_limit", 10**10)
-                )
-            ],
-            many=True,
-            read_only=True,
-        ).data
+        request = self.context.get("request")
+        limit = request.GET.get("recipes_limit")
+        if limit is None:
+            recipes = author.recipes.all()
+        else:
+            recipes = author.recipes.all()[:int(limit)]
+        return RecipeListSerializer(recipes, many=True, read_only=True).data
