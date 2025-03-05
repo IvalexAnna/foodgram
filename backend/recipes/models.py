@@ -217,7 +217,10 @@ class UserRecipeBaseModel(models.Model):
         default_related_name = "%(class)ss"
 
     def __str__(self):
-        return f"У {self.user.username[:constants.LETTER_COUNT]} в списке {self.recipe}"
+        return (
+            f"У {self.user.username[:constants.LETTER_COUNT]} "
+            f"в списке {self.recipe}"
+        )
 
 
 class Favorite(UserRecipeBaseModel):

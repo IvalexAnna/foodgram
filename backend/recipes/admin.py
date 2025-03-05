@@ -18,6 +18,7 @@ from .models import (
 admin.site.site_header = "Администрирование приложения «Recipes»"
 admin.site.unregister(models.Group)
 
+
 class RecipeIngredientsAdmin(admin.TabularInline):
     """Редактирование ингредиентов рецепта."""
 

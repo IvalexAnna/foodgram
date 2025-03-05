@@ -4,7 +4,7 @@ import hashids
 from django.db.models import Sum
 from django.conf import settings
 from django.shortcuts import redirect
-from django.http import FileResponse, HttpResponse, HttpResponseNotFound
+from django.http import FileResponse, HttpResponseNotFound
 from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
