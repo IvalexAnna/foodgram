@@ -4,7 +4,7 @@ import hashids
 from django.db.models import Sum
 from django.conf import settings
 from django.shortcuts import redirect
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import FileResponse, HttpResponse, HttpResponseNotFound
 from django.utils.formats import date_format
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -31,6 +31,7 @@ from .serializers import (
     TagSerializer,
     UserAvatarSerializer,
 )
+
 from .utils import generate_shopping_list
 from . import constants
 
@@ -213,4 +214,25 @@ class FoodgramUserViewSet(UserViewSet):
         return Response(
             FollowSerializer(author, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
+        )
+    @action(
+        ["get"],
+        detail=False,
+        url_path="download_shopping_cart",
+        permission_classes=[IsAuthenticated],
+    )
+    def download_shopping_cart(self, request):
+        recipes = Recipe.objects.filter(shoppingcarts__user=request.user)
+        ingredients = (
+            Ingredient.objects.filter(recipes__in=recipes)
+            .annotate(total_amount=Sum("recipe_ingredients__amount"))
+            .order_by("name")
+        )
+        return FileResponse(
+            generate_shopping_list(request.user, recipes, ingredients),
+            content_type="text/plain; charset=utf-8",
+            as_attachment=True,
+            filename=constants.FILENAME.format(
+                date_format(date.today(), constants.DATE_FORMAT_SHORT)
+            ),
         )
